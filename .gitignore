@@ -1,4 +1,5 @@
 *.csv
+!gps/demo_gps_timestamps.csv
 *.zip
 venv/
 __pycache__/
