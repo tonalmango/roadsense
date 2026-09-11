@@ -20,6 +20,7 @@ SEVERITY_COLORS = {
     "Moderate": [245, 166, 35],
     "Severe": [220, 65, 65],
 }
+ROAD_DAMAGE_CLASS = "RoadDamages"
 
 
 st.set_page_config(page_title="RoadSense", page_icon="RS", layout="wide")
@@ -87,12 +88,17 @@ def _filtered_detections(detections, severity_filter, damage_filter, priority_fi
 
 def _render_summary(statistics, detections):
     critical_count = sum(
-        detection.get("priority_level") == "Critical" for detection in detections
+        detection.get("damage_type") == ROAD_DAMAGE_CLASS
+        and detection.get("priority_level") == "Critical"
+        for detection in detections
+    )
+    road_damage_count = sum(
+        detection.get("damage_type") == ROAD_DAMAGE_CLASS for detection in detections
     )
     columns = st.columns(4)
     columns[0].metric("Frames Processed", statistics.get("sampled_frames", 0))
     columns[1].metric("Usable Frames", statistics.get("usable_frames", 0))
-    columns[2].metric("Damages Detected", len(detections))
+    columns[2].metric("RoadDamages Detected", road_damage_count)
     columns[3].metric("Critical Issues", critical_count)
 
 
@@ -170,6 +176,7 @@ def _render_table(detections):
     rows = [
         {
             "ID": detection.get("id"),
+            "Class ID": detection.get("class_id"),
             "Damage Type": detection.get("damage_type"),
             "Confidence": round(float(detection.get("confidence", 0)), 3),
             "Severity": detection.get("severity"),
@@ -206,6 +213,7 @@ def _render_details(detections, results_folder):
         st.json(
             {
                 "damage_type": selected.get("damage_type"),
+                "class_id": selected.get("class_id"),
                 "confidence": selected.get("confidence"),
                 "bbox": selected.get("bbox"),
                 "severity_score": selected.get("severity_score"),
@@ -213,8 +221,8 @@ def _render_details(detections, results_folder):
             }
         )
         st.caption(
-            "Severity is a prototype heuristic based on bounding-box extent, "
-            "crack geometry where applicable, damage type, and a small confidence component."
+            "Severity is a reproducible prototype heuristic for RoadDamages only, "
+            "based on bounding-box extent and a small confidence-reliability component."
         )
     with right:
         st.json(
@@ -227,7 +235,7 @@ def _render_details(detections, results_folder):
             }
         )
         st.write("**Priority reasoning**")
-        st.write(selected.get("priority_reason", "No priority reasoning available."))
+        st.write(selected.get("priority_reasoning", selected.get("priority_reason", "No priority reasoning available.")))
 
 
 def _render_repair_order(detections):
@@ -236,8 +244,13 @@ def _render_repair_order(detections):
         return
     for level in ("Critical", "High", "Medium", "Low"):
         level_detections = sorted(
-            (item for item in detections if item.get("priority_level") == level),
-            key=lambda item: item.get("priority_score", 0),
+            (
+                item
+                for item in detections
+                if item.get("damage_type") == ROAD_DAMAGE_CLASS
+                and item.get("priority_level") == level
+            ),
+            key=lambda item: item.get("priority_score") or 0,
             reverse=True,
         )
         if level_detections:
@@ -254,12 +267,13 @@ def _render_methodology():
         st.markdown(
             "- **Frame sampling:** one frame is sampled at the selected interval and "
             "checked with Laplacian-variance blur and mean brightness measurements.\n"
-            "- **YOLO detection:** the existing `model/best.pt` identifies road-damage regions.\n"
-            "- **Severity:** an explainable prototype heuristic uses bounding-box extent, "
-            "geometry where useful, damage type, and a small confidence-reliability component.\n"
+            "- **YOLO detection:** the active RAD YOLO11n model identifies HMV, LMV, "
+            "Pedestrian, RoadDamages, SpeedBump, and UnsurfacedRoad.\n"
+            "- **Severity:** an explainable prototype heuristic applies only to the broad "
+            "RoadDamages class. It does not classify potholes, cracks, manholes, or erosion.\n"
             "- **GPS:** timestamps are interpolated between supplied GPS readings where possible, "
             "or matched to the nearest reading with the time difference shown.\n"
-            "- **Repair priority:** a prototype decision-support score combines severity, damage "
+            "- **Repair priority:** a prototype decision-support score applies to RoadDamages and combines severity, damage "
             "risk, and optional road-context/traffic inputs. Road context and traffic are not "
             "measured by RoadSense."
         )
@@ -318,7 +332,7 @@ _render_summary(statistics, detections)
 st.header("2. Filters")
 filter_columns = st.columns(3)
 severity_filter = filter_columns[0].selectbox(
-    "Severity", ["All", "Minor", "Moderate", "Severe"]
+    "Severity", ["All", "Minor", "Moderate", "Severe", "N/A"]
 )
 damage_filter = filter_columns[1].selectbox("Damage Type", ["All", *damage_types])
 priority_filter = filter_columns[2].selectbox(

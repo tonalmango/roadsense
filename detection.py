@@ -1,4 +1,4 @@
-"""RoadSense YOLOv8 detection for individual images and extracted frames."""
+"""RoadSense RAD YOLO11n detection for individual images and extracted frames."""
 
 import argparse
 import json
@@ -9,23 +9,46 @@ from ultralytics import YOLO
 
 from priority import calculate_priority, prioritize_repair
 from gps_mapping import enrich_detections_with_gps, load_gps_records
-from severity import calculate_severity, calculate_severity_score
+from severity import ROAD_DAMAGE_CLASS, calculate_severity, calculate_severity_score
 
 
-MODEL_PATH = Path(__file__).parent / "model" / "best.pt"
+MODEL_PATH = Path(__file__).parent / "training" / "rad_yolo11n" / "weights" / "best.pt"
 CONFIDENCE_THRESHOLD = 0.15
+RAD_CLASS_NAMES = {
+    0: "HMV",
+    1: "LMV",
+    2: "Pedestrian",
+    3: "RoadDamages",
+    4: "SpeedBump",
+    5: "UnsurfacedRoad",
+}
 
-# Keep using the existing trained RoadSense model.
+# The original model/best.pt is intentionally retained but is not used here.
+if not MODEL_PATH.is_file():
+    raise FileNotFoundError(
+        f"Active RAD model was not found: {MODEL_PATH}. "
+        "RoadSense will not fall back to model/best.pt."
+    )
 model = YOLO(str(MODEL_PATH))
 
 
-def _damage_type_for_class(class_id):
-    """Return a safe class label if the model has no name for an ID."""
+def _model_class_names():
+    """Normalize Ultralytics class names for a one-time taxonomy check."""
     if isinstance(model.names, dict):
-        return str(model.names.get(class_id, "unknown"))
-    if 0 <= class_id < len(model.names):
-        return str(model.names[class_id])
-    return "unknown"
+        return {int(class_id): str(name) for class_id, name in model.names.items()}
+    return {class_id: str(name) for class_id, name in enumerate(model.names)}
+
+
+if _model_class_names() != RAD_CLASS_NAMES:
+    raise RuntimeError(
+        "Active model class names do not match the expected RAD taxonomy. "
+        f"Expected {RAD_CLASS_NAMES}; received {_model_class_names()}."
+    )
+
+
+def _damage_type_for_class(class_id):
+    """Return an actual RAD class label, or a safe label for invalid IDs."""
+    return RAD_CLASS_NAMES.get(class_id, "unknown")
 
 
 def _read_image(image_path):
@@ -104,6 +127,7 @@ def _image_detections(image_path):
             boxes.append(
                 {
                     "damage_type": _damage_type_for_class(class_id),
+                    "class_id": class_id,
                     "confidence": float(box.conf[0]),
                     **_box_coordinates(box, image_width, image_height),
                 }
@@ -111,12 +135,42 @@ def _image_detections(image_path):
     return boxes, _annotate_image(image, boxes)
 
 
+def _analysis_fields(box, road_context=None, traffic_factor=None):
+    """Apply prototype severity and repair priority only to RoadDamages."""
+    severity_score = calculate_severity_score(
+        box["damage_type"],
+        box["bbox_area_ratio"],
+        box["bbox_width"],
+        box["bbox_height"],
+        box["confidence"],
+    )
+    severity = calculate_severity(
+        box["damage_type"],
+        box["confidence"],
+        box["bbox_area_ratio"],
+        box["bbox_width"],
+        box["bbox_height"],
+    )
+    priority_data = prioritize_repair(
+        severity_score,
+        box["damage_type"],
+        road_context=road_context,
+        traffic_factor=traffic_factor,
+        bbox_area_ratio=box["bbox_area_ratio"],
+    )
+    return {
+        "severity_score": severity_score,
+        "severity": severity,
+        "severity_level": severity,
+        **priority_data,
+    }
+
+
 def detect_image(image_path, output_folder="results"):
     """Detect damage in one image and preserve the legacy return fields.
 
     This function remains usable for the original image-by-image workflow.
-    The metadata batch path below deliberately does not add severity or GPS to
-    ``detections.json``.
+    The metadata batch path below adds timestamps, GPS, and structured output.
     """
     image_path = Path(image_path)
     output_folder = Path(output_folder)
@@ -133,42 +187,27 @@ def detect_image(image_path, output_folder="results"):
 
     detections = []
     for box in boxes:
-        severity_score = calculate_severity_score(
-            box["damage_type"],
-            box["bbox_area_ratio"],
-            box["bbox_width"],
-            box["bbox_height"],
-            box["confidence"],
-        )
-        severity = calculate_severity(
-            box["damage_type"],
-            box["confidence"],
-            box["bbox_area_ratio"],
-            box["bbox_width"],
-            box["bbox_height"],
-        )
-        priority_data = prioritize_repair(
-            severity_score,
-            box["damage_type"],
-            bbox_area_ratio=box["bbox_area_ratio"],
-        )
+        analysis = _analysis_fields(box)
         detection = {
+            "class_id": box["class_id"],
             "damage_type": box["damage_type"],
             "confidence": box["confidence"],
-            "severity_score": severity_score,
-            "severity": severity,
-            "priority": calculate_priority(severity),
-            **priority_data,
+            **analysis,
+            "priority": calculate_priority(analysis["severity"]),
             "bbox": box["bbox"],
         }
         detections.append(detection)
+        priority_display = (
+            f"{detection['priority_level']} ({detection['priority_score']:.2f})"
+            if detection["priority_score"] is not None
+            else "N/A"
+        )
         print(
             f"Damage: {detection['damage_type']} | "
             f"Confidence: {detection['confidence']:.2%} | "
-            f"Severity score: {detection['severity_score']:.2f} | "
+            f"Severity score: {detection['severity_score']} | "
             f"Severity: {detection['severity']} | "
-            f"Priority: {detection['priority_level']} "
-            f"({detection['priority_score']:.2f})"
+            f"Priority: {priority_display}"
         )
 
     if not detections:
@@ -248,37 +287,17 @@ def process_frames_with_metadata(
         frame_number = frame_metadata.get("frame_number")
         timestamp_seconds = frame_metadata.get("timestamp_seconds")
         for box in boxes:
-            severity_score = calculate_severity_score(
-                box["damage_type"],
-                box["bbox_area_ratio"],
-                box["bbox_width"],
-                box["bbox_height"],
-                box["confidence"],
-            )
-            priority_data = prioritize_repair(
-                severity_score,
-                box["damage_type"],
-                road_context=road_context,
-                traffic_factor=traffic_factor,
-                bbox_area_ratio=box["bbox_area_ratio"],
-            )
+            analysis = _analysis_fields(box, road_context, traffic_factor)
             all_detections.append(
                 {
                     "id": len(all_detections) + 1,
                     "frame": frame_name,
                     "frame_number": frame_number,
                     "timestamp_seconds": timestamp_seconds,
+                    "class_id": box["class_id"],
                     "damage_type": box["damage_type"],
                     "confidence": box["confidence"],
-                    "severity_score": severity_score,
-                    "severity": calculate_severity(
-                        box["damage_type"],
-                        box["confidence"],
-                        box["bbox_area_ratio"],
-                        box["bbox_width"],
-                        box["bbox_height"],
-                    ),
-                    **priority_data,
+                    **analysis,
                     "bbox": box["bbox"],
                     "bbox_width": box["bbox_width"],
                     "bbox_height": box["bbox_height"],

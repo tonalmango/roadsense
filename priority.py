@@ -1,4 +1,6 @@
-"""Prototype, explainable repair-prioritisation heuristic for RoadSense."""
+"""Prototype, explainable RoadDamages repair-prioritisation heuristic."""
+
+from severity import ROAD_DAMAGE_CLASS
 
 
 # Configurable prototype weights. They sum to 1.0 (100% of priority score).
@@ -8,12 +10,7 @@ ROAD_CONTEXT_WEIGHT = 0.12
 TRAFFIC_WEIGHT = 0.08
 
 # Prototype risk values: not measured traffic, crash, or repair data.
-DAMAGE_TYPE_RISK = {
-    "pothole": 100.0,
-    "manhole": 85.0,
-    "crack": 60.0,
-    "unknown": 50.0,
-}
+DAMAGE_TYPE_RISK = {"roaddamages": 100.0}
 
 # Optional contextual inputs. Supplying a category is a user/context decision,
 # not a claim that RoadSense measured the road category or traffic level.
@@ -73,18 +70,28 @@ def prioritize_repair(
 ):
     """Return explainable prototype repair priority for one detection.
 
-    Formula:
+    Formula for the RAD ``RoadDamages`` class:
         priority = (0.60 * severity + 0.20 * damage risk
                     + 0.12 * road context + 0.08 * traffic)
 
     All inputs are normalized to 0--100. ``road_context`` and
     ``traffic_factor`` are optional contextual inputs; omitted values use a
     neutral 50-point baseline and are clearly stated in the reason. They are
-    never presented as data measured by this project.
+    never presented as data measured by this project. Other RAD classes are
+    contextual objects/features, not repair defects, and return N/A fields.
     """
+    if str(damage_type or "").lower() != ROAD_DAMAGE_CLASS.lower():
+        return {
+            "priority_score": None,
+            "priority_level": "N/A",
+            "priority_reason": "Not applicable: this RAD class is not RoadDamages.",
+            "priority_reasoning": "Not applicable: this RAD class is not RoadDamages.",
+        }
+
     severity_value = _score(severity_score, default=0.0)
-    normalized_type = str(damage_type or "unknown").lower()
-    damage_risk = DAMAGE_TYPE_RISK.get(normalized_type, DAMAGE_TYPE_RISK["unknown"])
+    damage_type_label = str(damage_type or ROAD_DAMAGE_CLASS)
+    normalized_type = damage_type_label.lower()
+    damage_risk = DAMAGE_TYPE_RISK[normalized_type]
     road_score, road_description = _road_context_score(road_context)
     traffic_score, traffic_description = _traffic_score(traffic_factor)
 
@@ -110,7 +117,7 @@ def prioritize_repair(
 
     priority_level = classify_priority(priority_score)
     priority_reason = (
-        f"{normalized_type} with severity score {severity_value:.1f}/100 "
+        f"{damage_type_label} with severity score {severity_value:.1f}/100 "
         f"and damage-risk score {damage_risk:.0f}/100"
         f"{extent_text}; road context {road_description} "
         f"({road_score:.0f}/100); traffic {traffic_description} "
@@ -120,6 +127,7 @@ def prioritize_repair(
         "priority_score": priority_score,
         "priority_level": priority_level,
         "priority_reason": priority_reason,
+        "priority_reasoning": priority_reason,
     }
 
 

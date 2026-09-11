@@ -1,10 +1,12 @@
-"""Prototype, explainable road-damage severity heuristic.
+"""Prototype, explainable RoadDamages severity heuristic.
 
 This module does not measure physical depth or structural condition. It ranks
-detected image regions for a hackathon demonstration using bounding-box extent,
-simple geometry, damage type, and a small confidence reliability component.
+the RAD RoadDamages class for a hackathon demonstration using bounding-box
+extent and a small confidence reliability component.
 """
 
+
+ROAD_DAMAGE_CLASS = "RoadDamages"
 
 SEVERITY_THRESHOLDS = {
     "Minor": 0,
@@ -13,12 +15,7 @@ SEVERITY_THRESHOLDS = {
 }
 
 # These are prototype risk weights, not scientific calibration or model metrics.
-DAMAGE_TYPE_RISK = {
-    "pothole": 1.20,
-    "manhole": 1.10,
-    "crack": 0.90,
-    "unknown": 1.00,
-}
+DAMAGE_TYPE_RISK = {"roaddamages": 1.00}
 
 
 def _number_in_range(value, minimum, maximum, default=0.0):
@@ -46,26 +43,27 @@ def calculate_severity_score(
                           + 0.10 * reliability) * type_risk)
 
     * ``extent`` reaches 100 when the bounding box covers 10% of the image.
-    * ``geometry`` is used for cracks only: a longer, thinner bounding box
-      receives a higher score, reaching 100 at an aspect ratio of 8:1.
+    * ``geometry`` is retained as zero for the broad RAD RoadDamages class.
+      RAD does not provide a separate crack-geometry label.
     * ``reliability`` is YOLO confidence times 100. It supplies at most ten
       points before the type-risk weight, so it cannot be the main driver.
 
     This is a transparent prioritisation heuristic, not a calibrated estimate
-    of physical road damage. Missing or invalid measurements become zero.
+    of physical road damage. It applies only to the RAD ``RoadDamages`` class;
+    other RAD classes return ``None`` because they are not repair defects.
+    Missing or invalid RoadDamages measurements become zero.
     """
     damage_type = str(damage_type or "unknown").lower()
-    risk_factor = DAMAGE_TYPE_RISK.get(damage_type, DAMAGE_TYPE_RISK["unknown"])
+    if damage_type != ROAD_DAMAGE_CLASS.lower():
+        return None
+    risk_factor = DAMAGE_TYPE_RISK[damage_type]
 
     area_ratio = _number_in_range(bbox_area_ratio, 0.0, 1.0)
     extent_score = min(100.0, (area_ratio / 0.10) * 100.0)
 
-    width = _number_in_range(bbox_width, 0.0, float("inf"))
-    height = _number_in_range(bbox_height, 0.0, float("inf"))
+    # The RAD taxonomy has only the broad RoadDamages class, so no crack-
+    # specific shape inference is made from this bounding box.
     geometry_score = 0.0
-    if damage_type == "crack" and width > 0 and height > 0:
-        aspect_ratio = max(width / height, height / width)
-        geometry_score = min(100.0, max(0.0, (aspect_ratio - 1.0) / 7.0 * 100.0))
 
     reliability_score = _number_in_range(confidence, 0.0, 1.0) * 100.0
     raw_score = (
@@ -78,6 +76,8 @@ def calculate_severity_score(
 
 def classify_severity(severity_score):
     """Map the documented prototype score bands to a severity label."""
+    if severity_score is None:
+        return "N/A"
     score = _number_in_range(severity_score, 0.0, 100.0)
     if score >= SEVERITY_THRESHOLDS["Severe"]:
         return "Severe"
@@ -97,7 +97,7 @@ def calculate_severity(
 
     Callers should pass bounding-box measurements whenever available. Confidence
     alone only affects the small reliability component and cannot imply severe
-    physical damage.
+    physical damage. Non-RoadDamages classes return ``N/A``.
     """
     score = calculate_severity_score(
         damage_type,
