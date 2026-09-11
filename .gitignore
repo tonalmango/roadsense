@@ -1,4 +1,12 @@
 *.csv
+!gps/demo_gps_timestamps.csv
 *.zip
 venv/
 __pycache__/
+
+# Local model-training artifacts and per-analysis outputs are not source files.
+training/
+results/runs/
+uploads/run_*/
+test_artifacts/
+audit_artifacts/
