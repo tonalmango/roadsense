@@ -1,0 +1,914 @@
+{
+  "source_video": "C:\\Users\\iamso\\OneDrive\\Documents\\roadsense\\uploads\\run_20260912_094549_ba767086\\video1.mp4",
+  "video": {
+    "fps": 59.872,
+    "total_frames": 5340,
+    "duration_seconds": 89.19,
+    "width": 848,
+    "height": 384,
+    "sampling": {
+      "mode": "seconds",
+      "interval": 1.0,
+      "effective_frame_interval": 60
+    }
+  },
+  "quality_thresholds": {
+    "blur_laplacian_variance_minimum": 40.0,
+    "brightness_minimum": 40.0,
+    "brightness_maximum": 215.0
+  },
+  "frames": [
+    {
+      "frame_number": 0,
+      "timestamp_seconds": 0.0,
+      "filename": "frame_000000.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 1005.55,
+      "brightness_score": 122.42,
+      "usable": true
+    },
+    {
+      "frame_number": 60,
+      "timestamp_seconds": 1.002,
+      "filename": "frame_000060.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 970.63,
+      "brightness_score": 124.96,
+      "usable": true
+    },
+    {
+      "frame_number": 120,
+      "timestamp_seconds": 2.004,
+      "filename": "frame_000120.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 980.41,
+      "brightness_score": 124.21,
+      "usable": true
+    },
+    {
+      "frame_number": 180,
+      "timestamp_seconds": 3.006,
+      "filename": "frame_000180.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 919.21,
+      "brightness_score": 123.29,
+      "usable": true
+    },
+    {
+      "frame_number": 240,
+      "timestamp_seconds": 4.009,
+      "filename": "frame_000240.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 1001.85,
+      "brightness_score": 122.33,
+      "usable": true
+    },
+    {
+      "frame_number": 300,
+      "timestamp_seconds": 5.011,
+      "filename": "frame_000300.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 987.24,
+      "brightness_score": 123.76,
+      "usable": true
+    },
+    {
+      "frame_number": 360,
+      "timestamp_seconds": 6.013,
+      "filename": "frame_000360.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 953.23,
+      "brightness_score": 124.81,
+      "usable": true
+    },
+    {
+      "frame_number": 420,
+      "timestamp_seconds": 7.015,
+      "filename": "frame_000420.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 902.64,
+      "brightness_score": 123.7,
+      "usable": true
+    },
+    {
+      "frame_number": 480,
+      "timestamp_seconds": 8.017,
+      "filename": "frame_000480.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 886.7,
+      "brightness_score": 122.59,
+      "usable": true
+    },
+    {
+      "frame_number": 540,
+      "timestamp_seconds": 9.019,
+      "filename": "frame_000540.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 868.01,
+      "brightness_score": 120.6,
+      "usable": true
+    },
+    {
+      "frame_number": 600,
+      "timestamp_seconds": 10.021,
+      "filename": "frame_000600.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 785.26,
+      "brightness_score": 118.24,
+      "usable": true
+    },
+    {
+      "frame_number": 660,
+      "timestamp_seconds": 11.023,
+      "filename": "frame_000660.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 790.36,
+      "brightness_score": 118.53,
+      "usable": true
+    },
+    {
+      "frame_number": 720,
+      "timestamp_seconds": 12.026,
+      "filename": "frame_000720.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 795.37,
+      "brightness_score": 116.72,
+      "usable": true
+    },
+    {
+      "frame_number": 780,
+      "timestamp_seconds": 13.028,
+      "filename": "frame_000780.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 833.11,
+      "brightness_score": 117.04,
+      "usable": true
+    },
+    {
+      "frame_number": 840,
+      "timestamp_seconds": 14.03,
+      "filename": "frame_000840.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 823.66,
+      "brightness_score": 116.77,
+      "usable": true
+    },
+    {
+      "frame_number": 900,
+      "timestamp_seconds": 15.032,
+      "filename": "frame_000900.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 901.68,
+      "brightness_score": 119.01,
+      "usable": true
+    },
+    {
+      "frame_number": 960,
+      "timestamp_seconds": 16.034,
+      "filename": "frame_000960.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 914.6,
+      "brightness_score": 120.58,
+      "usable": true
+    },
+    {
+      "frame_number": 1020,
+      "timestamp_seconds": 17.036,
+      "filename": "frame_001020.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 897.36,
+      "brightness_score": 122.22,
+      "usable": true
+    },
+    {
+      "frame_number": 1080,
+      "timestamp_seconds": 18.038,
+      "filename": "frame_001080.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 849.45,
+      "brightness_score": 123.77,
+      "usable": true
+    },
+    {
+      "frame_number": 1140,
+      "timestamp_seconds": 19.041,
+      "filename": "frame_001140.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 892.4,
+      "brightness_score": 124.13,
+      "usable": true
+    },
+    {
+      "frame_number": 1200,
+      "timestamp_seconds": 20.043,
+      "filename": "frame_001200.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 845.47,
+      "brightness_score": 123.3,
+      "usable": true
+    },
+    {
+      "frame_number": 1260,
+      "timestamp_seconds": 21.045,
+      "filename": "frame_001260.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 816.61,
+      "brightness_score": 126.77,
+      "usable": true
+    },
+    {
+      "frame_number": 1320,
+      "timestamp_seconds": 22.047,
+      "filename": "frame_001320.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 786.09,
+      "brightness_score": 124.55,
+      "usable": true
+    },
+    {
+      "frame_number": 1380,
+      "timestamp_seconds": 23.049,
+      "filename": "frame_001380.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 809.83,
+      "brightness_score": 120.19,
+      "usable": true
+    },
+    {
+      "frame_number": 1440,
+      "timestamp_seconds": 24.051,
+      "filename": "frame_001440.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 839.55,
+      "brightness_score": 122.08,
+      "usable": true
+    },
+    {
+      "frame_number": 1500,
+      "timestamp_seconds": 25.053,
+      "filename": "frame_001500.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 810.3,
+      "brightness_score": 113.1,
+      "usable": true
+    },
+    {
+      "frame_number": 1560,
+      "timestamp_seconds": 26.056,
+      "filename": "frame_001560.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 752.79,
+      "brightness_score": 109.33,
+      "usable": true
+    },
+    {
+      "frame_number": 1620,
+      "timestamp_seconds": 27.058,
+      "filename": "frame_001620.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 759.65,
+      "brightness_score": 115.02,
+      "usable": true
+    },
+    {
+      "frame_number": 1680,
+      "timestamp_seconds": 28.06,
+      "filename": "frame_001680.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 691.15,
+      "brightness_score": 117.81,
+      "usable": true
+    },
+    {
+      "frame_number": 1740,
+      "timestamp_seconds": 29.062,
+      "filename": "frame_001740.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 741.78,
+      "brightness_score": 124.46,
+      "usable": true
+    },
+    {
+      "frame_number": 1800,
+      "timestamp_seconds": 30.064,
+      "filename": "frame_001800.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 701.76,
+      "brightness_score": 120.27,
+      "usable": true
+    },
+    {
+      "frame_number": 1860,
+      "timestamp_seconds": 31.066,
+      "filename": "frame_001860.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 723.84,
+      "brightness_score": 127.93,
+      "usable": true
+    },
+    {
+      "frame_number": 1920,
+      "timestamp_seconds": 32.068,
+      "filename": "frame_001920.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 794.7,
+      "brightness_score": 129.45,
+      "usable": true
+    },
+    {
+      "frame_number": 1980,
+      "timestamp_seconds": 33.07,
+      "filename": "frame_001980.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 738.94,
+      "brightness_score": 124.5,
+      "usable": true
+    },
+    {
+      "frame_number": 2040,
+      "timestamp_seconds": 34.073,
+      "filename": "frame_002040.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 704.13,
+      "brightness_score": 118.25,
+      "usable": true
+    },
+    {
+      "frame_number": 2100,
+      "timestamp_seconds": 35.075,
+      "filename": "frame_002100.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 823.39,
+      "brightness_score": 124.68,
+      "usable": true
+    },
+    {
+      "frame_number": 2160,
+      "timestamp_seconds": 36.077,
+      "filename": "frame_002160.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 759.35,
+      "brightness_score": 120.49,
+      "usable": true
+    },
+    {
+      "frame_number": 2220,
+      "timestamp_seconds": 37.079,
+      "filename": "frame_002220.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 704.03,
+      "brightness_score": 116.51,
+      "usable": true
+    },
+    {
+      "frame_number": 2280,
+      "timestamp_seconds": 38.081,
+      "filename": "frame_002280.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 567.88,
+      "brightness_score": 106.7,
+      "usable": true
+    },
+    {
+      "frame_number": 2340,
+      "timestamp_seconds": 39.083,
+      "filename": "frame_002340.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 590.16,
+      "brightness_score": 115.75,
+      "usable": true
+    },
+    {
+      "frame_number": 2400,
+      "timestamp_seconds": 40.085,
+      "filename": "frame_002400.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 721.7,
+      "brightness_score": 118.57,
+      "usable": true
+    },
+    {
+      "frame_number": 2460,
+      "timestamp_seconds": 41.088,
+      "filename": "frame_002460.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 711.57,
+      "brightness_score": 120.89,
+      "usable": true
+    },
+    {
+      "frame_number": 2520,
+      "timestamp_seconds": 42.09,
+      "filename": "frame_002520.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 741.77,
+      "brightness_score": 121.4,
+      "usable": true
+    },
+    {
+      "frame_number": 2580,
+      "timestamp_seconds": 43.092,
+      "filename": "frame_002580.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 827.05,
+      "brightness_score": 125.22,
+      "usable": true
+    },
+    {
+      "frame_number": 2640,
+      "timestamp_seconds": 44.094,
+      "filename": "frame_002640.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 820.91,
+      "brightness_score": 125.41,
+      "usable": true
+    },
+    {
+      "frame_number": 2700,
+      "timestamp_seconds": 45.096,
+      "filename": "frame_002700.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 774.05,
+      "brightness_score": 125.81,
+      "usable": true
+    },
+    {
+      "frame_number": 2760,
+      "timestamp_seconds": 46.098,
+      "filename": "frame_002760.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 814.36,
+      "brightness_score": 126.89,
+      "usable": true
+    },
+    {
+      "frame_number": 2820,
+      "timestamp_seconds": 47.1,
+      "filename": "frame_002820.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 785.93,
+      "brightness_score": 125.39,
+      "usable": true
+    },
+    {
+      "frame_number": 2880,
+      "timestamp_seconds": 48.102,
+      "filename": "frame_002880.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 761.52,
+      "brightness_score": 120.96,
+      "usable": true
+    },
+    {
+      "frame_number": 2940,
+      "timestamp_seconds": 49.105,
+      "filename": "frame_002940.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 765.78,
+      "brightness_score": 119.72,
+      "usable": true
+    },
+    {
+      "frame_number": 3000,
+      "timestamp_seconds": 50.107,
+      "filename": "frame_003000.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 881.03,
+      "brightness_score": 115.36,
+      "usable": true
+    },
+    {
+      "frame_number": 3060,
+      "timestamp_seconds": 51.109,
+      "filename": "frame_003060.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 828.8,
+      "brightness_score": 110.05,
+      "usable": true
+    },
+    {
+      "frame_number": 3120,
+      "timestamp_seconds": 52.111,
+      "filename": "frame_003120.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 802.22,
+      "brightness_score": 128.78,
+      "usable": true
+    },
+    {
+      "frame_number": 3180,
+      "timestamp_seconds": 53.113,
+      "filename": "frame_003180.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 851.65,
+      "brightness_score": 133.07,
+      "usable": true
+    },
+    {
+      "frame_number": 3240,
+      "timestamp_seconds": 54.115,
+      "filename": "frame_003240.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 869.67,
+      "brightness_score": 127.68,
+      "usable": true
+    },
+    {
+      "frame_number": 3300,
+      "timestamp_seconds": 55.117,
+      "filename": "frame_003300.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 843.89,
+      "brightness_score": 123.99,
+      "usable": true
+    },
+    {
+      "frame_number": 3360,
+      "timestamp_seconds": 56.12,
+      "filename": "frame_003360.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 824.72,
+      "brightness_score": 124.41,
+      "usable": true
+    },
+    {
+      "frame_number": 3420,
+      "timestamp_seconds": 57.122,
+      "filename": "frame_003420.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 824.29,
+      "brightness_score": 124.54,
+      "usable": true
+    },
+    {
+      "frame_number": 3480,
+      "timestamp_seconds": 58.124,
+      "filename": "frame_003480.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 842.0,
+      "brightness_score": 126.24,
+      "usable": true
+    },
+    {
+      "frame_number": 3540,
+      "timestamp_seconds": 59.126,
+      "filename": "frame_003540.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 882.88,
+      "brightness_score": 130.66,
+      "usable": true
+    },
+    {
+      "frame_number": 3600,
+      "timestamp_seconds": 60.128,
+      "filename": "frame_003600.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 814.28,
+      "brightness_score": 121.94,
+      "usable": true
+    },
+    {
+      "frame_number": 3660,
+      "timestamp_seconds": 61.13,
+      "filename": "frame_003660.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 880.17,
+      "brightness_score": 121.95,
+      "usable": true
+    },
+    {
+      "frame_number": 3720,
+      "timestamp_seconds": 62.132,
+      "filename": "frame_003720.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 851.75,
+      "brightness_score": 122.02,
+      "usable": true
+    },
+    {
+      "frame_number": 3780,
+      "timestamp_seconds": 63.134,
+      "filename": "frame_003780.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 839.43,
+      "brightness_score": 120.39,
+      "usable": true
+    },
+    {
+      "frame_number": 3840,
+      "timestamp_seconds": 64.137,
+      "filename": "frame_003840.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 815.85,
+      "brightness_score": 118.31,
+      "usable": true
+    },
+    {
+      "frame_number": 3900,
+      "timestamp_seconds": 65.139,
+      "filename": "frame_003900.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 825.92,
+      "brightness_score": 115.08,
+      "usable": true
+    },
+    {
+      "frame_number": 3960,
+      "timestamp_seconds": 66.141,
+      "filename": "frame_003960.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 805.23,
+      "brightness_score": 107.24,
+      "usable": true
+    },
+    {
+      "frame_number": 4020,
+      "timestamp_seconds": 67.143,
+      "filename": "frame_004020.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 719.61,
+      "brightness_score": 105.19,
+      "usable": true
+    },
+    {
+      "frame_number": 4080,
+      "timestamp_seconds": 68.145,
+      "filename": "frame_004080.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 847.47,
+      "brightness_score": 103.67,
+      "usable": true
+    },
+    {
+      "frame_number": 4140,
+      "timestamp_seconds": 69.147,
+      "filename": "frame_004140.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 915.22,
+      "brightness_score": 115.94,
+      "usable": true
+    },
+    {
+      "frame_number": 4200,
+      "timestamp_seconds": 70.149,
+      "filename": "frame_004200.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 895.42,
+      "brightness_score": 120.9,
+      "usable": true
+    },
+    {
+      "frame_number": 4260,
+      "timestamp_seconds": 71.152,
+      "filename": "frame_004260.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 835.1,
+      "brightness_score": 117.26,
+      "usable": true
+    },
+    {
+      "frame_number": 4320,
+      "timestamp_seconds": 72.154,
+      "filename": "frame_004320.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 862.44,
+      "brightness_score": 119.49,
+      "usable": true
+    },
+    {
+      "frame_number": 4380,
+      "timestamp_seconds": 73.156,
+      "filename": "frame_004380.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 871.14,
+      "brightness_score": 114.57,
+      "usable": true
+    },
+    {
+      "frame_number": 4440,
+      "timestamp_seconds": 74.158,
+      "filename": "frame_004440.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 876.74,
+      "brightness_score": 116.84,
+      "usable": true
+    },
+    {
+      "frame_number": 4500,
+      "timestamp_seconds": 75.16,
+      "filename": "frame_004500.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 876.31,
+      "brightness_score": 119.67,
+      "usable": true
+    },
+    {
+      "frame_number": 4560,
+      "timestamp_seconds": 76.162,
+      "filename": "frame_004560.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 752.53,
+      "brightness_score": 113.95,
+      "usable": true
+    },
+    {
+      "frame_number": 4620,
+      "timestamp_seconds": 77.164,
+      "filename": "frame_004620.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 749.96,
+      "brightness_score": 117.28,
+      "usable": true
+    },
+    {
+      "frame_number": 4680,
+      "timestamp_seconds": 78.167,
+      "filename": "frame_004680.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 840.86,
+      "brightness_score": 118.62,
+      "usable": true
+    },
+    {
+      "frame_number": 4740,
+      "timestamp_seconds": 79.169,
+      "filename": "frame_004740.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 844.55,
+      "brightness_score": 118.77,
+      "usable": true
+    },
+    {
+      "frame_number": 4800,
+      "timestamp_seconds": 80.171,
+      "filename": "frame_004800.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 905.2,
+      "brightness_score": 120.51,
+      "usable": true
+    },
+    {
+      "frame_number": 4860,
+      "timestamp_seconds": 81.173,
+      "filename": "frame_004860.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 880.92,
+      "brightness_score": 115.68,
+      "usable": true
+    },
+    {
+      "frame_number": 4920,
+      "timestamp_seconds": 82.175,
+      "filename": "frame_004920.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 888.33,
+      "brightness_score": 113.06,
+      "usable": true
+    },
+    {
+      "frame_number": 4980,
+      "timestamp_seconds": 83.177,
+      "filename": "frame_004980.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 901.21,
+      "brightness_score": 112.01,
+      "usable": true
+    },
+    {
+      "frame_number": 5040,
+      "timestamp_seconds": 84.179,
+      "filename": "frame_005040.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 782.26,
+      "brightness_score": 111.54,
+      "usable": true
+    },
+    {
+      "frame_number": 5100,
+      "timestamp_seconds": 85.181,
+      "filename": "frame_005100.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 482.68,
+      "brightness_score": 70.69,
+      "usable": true
+    },
+    {
+      "frame_number": 5160,
+      "timestamp_seconds": 86.184,
+      "filename": "frame_005160.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 634.51,
+      "brightness_score": 67.05,
+      "usable": true
+    },
+    {
+      "frame_number": 5220,
+      "timestamp_seconds": 87.186,
+      "filename": "frame_005220.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 6.72,
+      "brightness_score": 75.55,
+      "usable": false
+    },
+    {
+      "frame_number": 5280,
+      "timestamp_seconds": 88.188,
+      "filename": "frame_005280.jpg",
+      "width": 848,
+      "height": 384,
+      "blur_score": 1599.46,
+      "brightness_score": 77.86,
+      "usable": true
+    }
+  ],
+  "frames_read": 5340,
+  "frames_saved": 89
+}
