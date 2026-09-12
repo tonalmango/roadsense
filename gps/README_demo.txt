@@ -1,0 +1,1 @@
+These GPS coordinates are synthetic demonstration data created for the RoadSense prototype. They are not collected from a real GPS device and are used only to demonstrate timestamp synchronization and map visualization.
