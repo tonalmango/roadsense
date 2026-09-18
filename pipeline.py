@@ -41,6 +41,10 @@ def run_pipeline(
     every_n_frames=None,
     road_context=None,
     traffic_factor=None,
+    minimum_confidence=None,
+    temporal_confirmation_frames=1,
+    preprocess_frames=False,
+    preprocessing_size=512,
 ):
     """Run extraction, quality filtering, detection, GPS, and prioritisation.
 
@@ -63,8 +67,9 @@ def run_pipeline(
     try:
         # Imports are delayed so a missing runtime dependency is reported as a
         # pipeline failure instead of preventing even the command help screen.
-        from detection import process_frames_with_metadata
+        from detection import CLASS_CONFIDENCE_THRESHOLDS, process_frames_with_metadata
         from frame_extraction import extract_frames
+        from gps_mapping import inspect_video_embedded_gps
 
         print("[1/6] Extracting frames...")
         frame_metadata = extract_frames(
@@ -96,11 +101,28 @@ def run_pipeline(
             gps_data_path=gps_data_path,
             road_context=road_context,
             traffic_factor=traffic_factor,
+            minimum_confidence=minimum_confidence,
+            temporal_confirmation_frames=temporal_confirmation_frames,
+            preprocess_frames=preprocess_frames,
+            preprocessing_size=preprocessing_size,
         )
 
         _write_json(final_path, detections)
         elapsed_seconds = time.perf_counter() - started_at
         statistics = _statistics(video_path, frame_metadata, detections, elapsed_seconds)
+        telemetry = inspect_video_embedded_gps(video_path)
+        statistics.update(
+            {
+                "media_type": "video",
+                "confidence_floor": minimum_confidence,
+                "class_confidence_thresholds": CLASS_CONFIDENCE_THRESHOLDS,
+                "temporal_confirmation_frames": temporal_confirmation_frames,
+                "explicit_preprocessing": bool(preprocess_frames),
+                "preprocessing_size": preprocessing_size if preprocess_frames else None,
+                "gps_source": "External GPS file" if gps_data_path else "Unavailable",
+                "embedded_video_gps": telemetry,
+            }
+        )
         _write_json(statistics_path, statistics)
         print(f"Final detections saved to: {final_path}")
         print(f"Processing statistics saved to: {statistics_path}")
@@ -124,6 +146,104 @@ def run_pipeline(
         return failure
 
 
+def run_image_pipeline(
+    image_path,
+    results_folder="results",
+    gps_data_path=None,
+    road_context=None,
+    traffic_factor=None,
+    minimum_confidence=None,
+    preprocess=False,
+    preprocessing_size=512,
+):
+    """Run the compatible still-image path without treating an image as video."""
+    image_path = Path(image_path)
+    results_folder = Path(results_folder)
+    results_folder.mkdir(parents=True, exist_ok=True)
+    statistics_path = results_folder / "processing_statistics.json"
+    final_path = results_folder / "final_detections.json"
+    metadata_path = results_folder / "image_metadata.json"
+    started_at = time.perf_counter()
+    try:
+        if image_path.suffix.lower() not in {".jpg", ".jpeg", ".png", ".webp"}:
+            raise ValueError("Unsupported image format. Use JPG, JPEG, PNG, or WebP.")
+        from detection import CLASS_CONFIDENCE_THRESHOLDS, process_single_image
+        from frame_extraction import assess_frame_quality
+        from gps_mapping import extract_image_exif_gps
+        from capture_metadata import extract_image_capture_date
+        import cv2
+
+        image = cv2.imread(str(image_path))
+        if image is None:
+            raise ValueError(f"Could not read image: {image_path}")
+        height, width = image.shape[:2]
+        quality = assess_frame_quality(image)
+        exif_gps = extract_image_exif_gps(image_path)
+        capture_date = extract_image_capture_date(image_path)
+        metadata = {
+            "source_image": str(image_path),
+            "media_type": "image",
+            "width": width,
+            "height": height,
+            **quality,
+            "gps": exif_gps,
+            "capture_date": capture_date,
+        }
+        _write_json(metadata_path, metadata)
+        # A supplied timestamped GPS file has no trustworthy offset for a still
+        # image, so EXIF is preferred and external GPS is not guessed.
+        detections, diagnostics = process_single_image(
+            image_path=image_path,
+            output_folder=results_folder,
+            road_context=road_context,
+            traffic_factor=traffic_factor,
+            minimum_confidence=minimum_confidence,
+            gps_data=exif_gps,
+            preprocess=preprocess,
+            preprocessing_size=preprocessing_size,
+        )
+        if capture_date:
+            for detection in detections:
+                detection["capture_date"] = capture_date
+            _write_json(results_folder / "detections.json", detections)
+        _write_json(final_path, detections)
+        elapsed = time.perf_counter() - started_at
+        statistics = {
+            "media_type": "image",
+            "image": str(image_path),
+            "images_processed": 1,
+            "usable_inputs": int(quality["usable"]),
+            "detections": len(detections),
+            "rejected_low_confidence": diagnostics["rejected_low_confidence"],
+            "confidence_floor": minimum_confidence,
+            "class_confidence_thresholds": CLASS_CONFIDENCE_THRESHOLDS,
+            "gps_source": exif_gps["gps_source"],
+            "capture_date": capture_date,
+            "explicit_preprocessing": bool(preprocess),
+            "preprocessing_size": preprocessing_size if preprocess else None,
+            "external_gps_ignored": bool(gps_data_path),
+            "processing_time_seconds": round(elapsed, 3),
+        }
+        _write_json(statistics_path, statistics)
+        return {
+            "success": True,
+            "final_detections_path": str(final_path),
+            "statistics_path": str(statistics_path),
+            "statistics": statistics,
+        }
+    except Exception as error:
+        failure = {
+            "success": False,
+            "media_type": "image",
+            "image": str(image_path),
+            "error": str(error),
+            "processing_time_seconds": round(time.perf_counter() - started_at, 3),
+        }
+        _write_json(statistics_path, failure)
+        print(f"Image pipeline failed: {error}")
+        return failure
+
+
 def _parse_arguments():
     parser = argparse.ArgumentParser(description="Run the RoadSense MP4 pipeline.")
     parser.add_argument("video", type=Path, help="Path to an MP4 dashcam video.")
@@ -138,6 +258,14 @@ def _parse_arguments():
     parser.add_argument(
         "--road-context",
         help="Optional prototype context: motorway, arterial, collector, or local.",
+    )
+    parser.add_argument(
+        "--min-confidence", type=float,
+        help="Optional confidence floor; class-specific thresholds still apply.",
+    )
+    parser.add_argument(
+        "--temporal-confirmation-frames", type=int, default=1,
+        help="Road-condition confirmations required across sampled frames (default: 1).",
     )
     parser.add_argument(
         "--traffic-factor",
@@ -158,5 +286,7 @@ if __name__ == "__main__":
         every_seconds=arguments.every_seconds,
         road_context=arguments.road_context,
         traffic_factor=arguments.traffic_factor,
+        minimum_confidence=arguments.min_confidence,
+        temporal_confirmation_frames=arguments.temporal_confirmation_frames,
     )
     raise SystemExit(0 if result["success"] else 1)

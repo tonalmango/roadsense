@@ -30,6 +30,11 @@ class SeverityHeuristicTests(unittest.TestCase):
         self.assertIsNone(calculate_severity_score("unknown", 0.05, 100, 100, 0.5))
         self.assertEqual(classify_severity(None), "N/A")
 
+    def test_specific_pothole_uses_same_reproducible_damage_heuristic(self):
+        score = calculate_severity_score("Pothole", 0.002, 100, 20, 0.90)
+        self.assertEqual(score, 10.4)
+        self.assertEqual(classify_severity(score), "Minor")
+
 
 if __name__ == "__main__":
     unittest.main()

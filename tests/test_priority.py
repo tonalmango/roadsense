@@ -26,6 +26,10 @@ class RepairPriorityTests(unittest.TestCase):
         self.assertEqual(result["priority_level"], "N/A")
         self.assertIn("not RoadDamages", result["priority_reason"])
 
+    def test_specific_crack_is_prioritised_as_a_repair_damage(self):
+        result = prioritize_repair(60, "Longitudinal Crack")
+        self.assertNotEqual(result["priority_level"], "N/A")
+
     def test_invalid_optional_context_is_bounded(self):
         result = prioritize_repair(100, "RoadDamages", road_context=200, traffic_factor=-10)
         self.assertEqual(result["priority_score"], 92.0)

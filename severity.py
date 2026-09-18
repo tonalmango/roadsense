@@ -1,12 +1,16 @@
 """Prototype, explainable RoadDamages severity heuristic.
 
 This module does not measure physical depth or structural condition. It ranks
-the RAD RoadDamages class for a hackathon demonstration using bounding-box
-extent and a small confidence reliability component.
+the generic RAD RoadDamages fallback and verified specific damage labels using
+bounding-box extent and a small confidence reliability component.
 """
 
 
 ROAD_DAMAGE_CLASS = "RoadDamages"
+SPECIFIC_DAMAGE_CLASSES = {
+    "Pothole", "Longitudinal Crack", "Transverse Crack", "Alligator Crack",
+}
+REPAIR_DAMAGE_CLASSES = {ROAD_DAMAGE_CLASS, *SPECIFIC_DAMAGE_CLASSES}
 
 SEVERITY_THRESHOLDS = {
     "Minor": 0,
@@ -15,7 +19,7 @@ SEVERITY_THRESHOLDS = {
 }
 
 # These are prototype risk weights, not scientific calibration or model metrics.
-DAMAGE_TYPE_RISK = {"roaddamages": 1.00}
+DAMAGE_TYPE_RISK = {name.lower(): 1.00 for name in REPAIR_DAMAGE_CLASSES}
 
 
 def _number_in_range(value, minimum, maximum, default=0.0):
@@ -49,12 +53,12 @@ def calculate_severity_score(
       points before the type-risk weight, so it cannot be the main driver.
 
     This is a transparent prioritisation heuristic, not a calibrated estimate
-    of physical road damage. It applies only to the RAD ``RoadDamages`` class;
-    other RAD classes return ``None`` because they are not repair defects.
+    of physical road damage. It applies only to repair-relevant road-damage
+    labels; other RAD classes return ``None`` because they are not repair defects.
     Missing or invalid RoadDamages measurements become zero.
     """
     damage_type = str(damage_type or "unknown").lower()
-    if damage_type != ROAD_DAMAGE_CLASS.lower():
+    if damage_type not in DAMAGE_TYPE_RISK:
         return None
     risk_factor = DAMAGE_TYPE_RISK[damage_type]
 

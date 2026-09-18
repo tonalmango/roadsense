@@ -1,3 +1,19 @@
-*.zip
+# Python environments and cache
 venv/
 __pycache__/
+*.py[cod]
+
+# Generated local analysis artifacts
+frames/
+results/
+uploads/run_*/
+test_artifacts/
+
+# Model weights, training runs, and downloaded datasets stay local
+training/*/weights/
+training/*/*.pt
+yolo11*.pt
+*.zip
+
+# Windows metadata
+desktop.ini

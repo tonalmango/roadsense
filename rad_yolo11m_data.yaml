@@ -1,0 +1,12 @@
+# Project-local RAD training configuration. The external dataset is read-only.
+path: D:/datasetRad
+train: train/images
+val: valid/images
+test: test/images
+names:
+  0: HMV
+  1: LMV
+  2: Pedestrian
+  3: RoadDamages
+  4: SpeedBump
+  5: UnsurfacedRoad
