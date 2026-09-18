@@ -1,9 +1,0 @@
-{
-  "video": "videos\\demo_road.mp4",
-  "total_video_frames": 5340,
-  "sampled_frames": 89,
-  "usable_frames": 88,
-  "skipped_frames": 1,
-  "detections": 80,
-  "processing_time_seconds": 6.935
-}

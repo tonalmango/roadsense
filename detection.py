@@ -9,24 +9,28 @@ from ultralytics import YOLO
 
 from priority import calculate_priority, prioritize_repair
 from gps_mapping import enrich_detections_with_gps, load_gps_records
+from model_config import RDD2022_SUBTYPES, active_model_profile
+from damage_model import refine_road_damage_boxes
+from occlusion import add_occlusion_indicators
+from frame_preprocessing import bbox_to_original, letterbox_frame
 from severity import ROAD_DAMAGE_CLASS, calculate_severity, calculate_severity_score
 
 
-MODEL_PATH = Path(__file__).parent / "training" / "rad_yolo11n" / "weights" / "best.pt"
-CONFIDENCE_THRESHOLD = 0.15
-RAD_CLASS_NAMES = {
-    0: "HMV",
-    1: "LMV",
-    2: "Pedestrian",
-    3: "RoadDamages",
-    4: "SpeedBump",
-    5: "UnsurfacedRoad",
-}
+ACTIVE_MODEL_PROFILE, MODEL_CONFIG = active_model_profile()
+MODEL_PATH = MODEL_CONFIG["path"]
+# These are inference acceptance thresholds, not accuracy values. They are
+# deliberately above the old 0.15 global cutoff to reduce weak one-frame hits.
+# A caller may raise the floor for a particular demo run without changing code.
+CONFIDENCE_THRESHOLD = 0.25
+CLASS_CONFIDENCE_THRESHOLDS = MODEL_CONFIG["confidence_thresholds"]
+ROAD_CONDITION_CLASSES = MODEL_CONFIG["road_condition_classes"]
+MODEL_CLASS_NAMES = MODEL_CONFIG["class_names"]
+RAD_CLASS_NAMES = MODEL_CLASS_NAMES  # Backward-compatible exported name.
 
 # The original model/best.pt is intentionally retained but is not used here.
 if not MODEL_PATH.is_file():
     raise FileNotFoundError(
-        f"Active RAD model was not found: {MODEL_PATH}. "
+        f"Active {ACTIVE_MODEL_PROFILE} model was not found: {MODEL_PATH}. "
         "RoadSense will not fall back to model/best.pt."
     )
 model = YOLO(str(MODEL_PATH))
@@ -39,16 +43,21 @@ def _model_class_names():
     return {class_id: str(name) for class_id, name in enumerate(model.names)}
 
 
-if _model_class_names() != RAD_CLASS_NAMES:
+if _model_class_names() != MODEL_CLASS_NAMES:
     raise RuntimeError(
-        "Active model class names do not match the expected RAD taxonomy. "
-        f"Expected {RAD_CLASS_NAMES}; received {_model_class_names()}."
+        f"Active model class names do not match the expected {ACTIVE_MODEL_PROFILE} taxonomy. "
+        f"Expected {MODEL_CLASS_NAMES}; received {_model_class_names()}."
     )
 
 
 def _damage_type_for_class(class_id):
-    """Return an actual RAD class label, or a safe label for invalid IDs."""
-    return RAD_CLASS_NAMES.get(class_id, "unknown")
+    """Return a repair-compatible category without losing model subtype data."""
+    model_label = MODEL_CLASS_NAMES.get(class_id, "unknown")
+    return ROAD_DAMAGE_CLASS if ACTIVE_MODEL_PROFILE == "rdd2022" and model_label != "unknown" else model_label
+
+
+def _model_label_for_class(class_id):
+    return MODEL_CLASS_NAMES.get(class_id, "unknown")
 
 
 def _read_image(image_path):
@@ -58,23 +67,29 @@ def _read_image(image_path):
     return image
 
 
-def _run_yolo(image_path):
-    """Run the existing YOLO model with the project's current threshold."""
+def _run_yolo(source, minimum_confidence=None):
+    """Run YOLO once, then apply transparent class-specific filtering locally."""
+    inference_floor = min(CLASS_CONFIDENCE_THRESHOLDS.values())
+    if minimum_confidence is not None:
+        inference_floor = max(inference_floor, float(minimum_confidence))
     return model.predict(
-        source=str(image_path),
-        conf=CONFIDENCE_THRESHOLD,
+        source=source,
+        conf=inference_floor,
         save=False,
         verbose=False,
     )[0]
 
 
-def _box_coordinates(box, image_width, image_height):
+def _box_coordinates(box, image_width, image_height, preprocessing=None):
     """Convert a YOLO box to integer image coordinates and derived dimensions."""
     raw_x1, raw_y1, raw_x2, raw_y2 = box.xyxy[0].tolist()
-    x1 = max(0, min(image_width, int(raw_x1)))
-    y1 = max(0, min(image_height, int(raw_y1)))
-    x2 = max(0, min(image_width, int(raw_x2)))
-    y2 = max(0, min(image_height, int(raw_y2)))
+    raw_bbox = [raw_x1, raw_y1, raw_x2, raw_y2]
+    if preprocessing:
+        raw_bbox = bbox_to_original(raw_bbox, preprocessing)
+    x1 = max(0, min(image_width, int(raw_bbox[0])))
+    y1 = max(0, min(image_height, int(raw_bbox[1])))
+    x2 = max(0, min(image_width, int(raw_bbox[2])))
+    y2 = max(0, min(image_height, int(raw_bbox[3])))
 
     bbox_width = max(0, x2 - x1)
     bbox_height = max(0, y2 - y1)
@@ -111,32 +126,73 @@ def _annotate_image(image, boxes):
     return annotated
 
 
-def _image_detections(image_path):
-    """Run detection and return box data plus an annotated image, if readable."""
+def _threshold_for_class(class_name, minimum_confidence=None):
+    """Return the recorded acceptance threshold for one RAD class."""
+    threshold = CLASS_CONFIDENCE_THRESHOLDS.get(class_name, CONFIDENCE_THRESHOLD)
+    if minimum_confidence is not None:
+        try:
+            threshold = max(threshold, float(minimum_confidence))
+        except (TypeError, ValueError):
+            pass
+    return threshold
+
+
+def _detection_group(damage_type):
+    return "road_defect_condition" if damage_type in ROAD_CONDITION_CLASSES else "road_context"
+
+
+def _image_detections(image_path, minimum_confidence=None, preprocess=False, preprocessing_size=512):
+    """Run detection and return accepted boxes, annotation, and diagnostics."""
     image_path = Path(image_path)
     image = _read_image(image_path)
     if image is None:
-        return [], None
+        return [], None, {"rejected_low_confidence": 0}
 
     image_height, image_width = image.shape[:2]
-    result = _run_yolo(image_path)
+    preprocessing = None
+    inference_source = str(image_path)
+    if preprocess:
+        inference_source, preprocessing = letterbox_frame(image, target_size=preprocessing_size)
+    result = _run_yolo(inference_source, minimum_confidence)
     boxes = []
+    rejected_low_confidence = 0
     if result.boxes is not None:
         for box in result.boxes:
             class_id = int(box.cls[0])
+            model_class = _model_label_for_class(class_id)
+            damage_type = _damage_type_for_class(class_id)
+            confidence = float(box.conf[0])
+            threshold_used = _threshold_for_class(model_class, minimum_confidence)
+            if confidence < threshold_used:
+                rejected_low_confidence += 1
+                continue
             boxes.append(
                 {
-                    "damage_type": _damage_type_for_class(class_id),
+                    "damage_type": damage_type,
+                    "model_class": model_class,
                     "class_id": class_id,
-                    "confidence": float(box.conf[0]),
-                    **_box_coordinates(box, image_width, image_height),
+                    "confidence": confidence,
+                    "threshold_used": threshold_used,
+                    "detection_group": _detection_group(model_class),
+                    "damage_category": damage_type,
+                    "damage_subtype": (
+                        RDD2022_SUBTYPES.get(model_class, "Unknown / Not classified")
+                        if damage_type == ROAD_DAMAGE_CLASS else "N/A"
+                    ),
+                    **_box_coordinates(box, image_width, image_height, preprocessing),
+                    "preprocessing": preprocessing or {"enabled": False},
                 }
             )
-    return boxes, _annotate_image(image, boxes)
+    boxes, refinement = refine_road_damage_boxes(image, boxes, minimum_confidence)
+    boxes = add_occlusion_indicators(boxes)
+    return boxes, _annotate_image(image, boxes), {
+        "rejected_low_confidence": rejected_low_confidence,
+        "damage_refinement": refinement,
+    }
 
 
 def _analysis_fields(box, road_context=None, traffic_factor=None):
-    """Apply prototype severity and repair priority only to RoadDamages."""
+    """Apply existing prototype scoring to repair-relevant damage labels only."""
     severity_score = calculate_severity_score(
         box["damage_type"],
         box["bbox_area_ratio"],
@@ -177,7 +233,7 @@ def detect_image(image_path, output_folder="results"):
     output_folder.mkdir(parents=True, exist_ok=True)
     print(f"\nProcessing: {image_path.name}")
 
-    boxes, annotated = _image_detections(image_path)
+    boxes, annotated, _ = _image_detections(image_path)
     if annotated is None:
         return []
 
@@ -191,6 +247,7 @@ def detect_image(image_path, output_folder="results"):
         detection = {
             "class_id": box["class_id"],
             "damage_type": box["damage_type"],
+            "model_class": box["model_class"],
             "confidence": box["confidence"],
             **analysis,
             "priority": calculate_priority(analysis["severity"]),
@@ -232,6 +289,56 @@ def _load_frame_metadata(metadata_path):
     return metadata
 
 
+def _iou(first_bbox, second_bbox):
+    """Calculate bounding-box IoU for lightweight video confirmation."""
+    ax1, ay1, ax2, ay2 = first_bbox
+    bx1, by1, bx2, by2 = second_bbox
+    overlap_width = max(0, min(ax2, bx2) - max(ax1, bx1))
+    overlap_height = max(0, min(ay2, by2) - max(ay1, by1))
+    overlap = overlap_width * overlap_height
+    union = (ax2 - ax1) * (ay2 - ay1) + (bx2 - bx1) * (by2 - by1) - overlap
+    return overlap / union if union else 0.0
+
+
+def _temporally_confirm(candidates, required_frames=1, iou_threshold=0.10, max_gap_seconds=2.5):
+    """Keep persistent road-condition detections; context objects stay visible.
+
+    Sampling intervals can be large, so the default is one (disabled). Setting
+    two or three requires same-class road conditions to overlap in nearby
+    sampled frames, reducing isolated predictions without claiming tracking.
+    """
+    if required_frames <= 1:
+        return candidates
+    confirmed = []
+    for candidate in candidates:
+        if candidate.get("detection_group") != "road_defect_condition":
+            confirmed.append(candidate)
+            continue
+        nearby = 1
+        for other in candidates:
+            if (
+                other is candidate
+                or other.get("model_class", other["damage_type"])
+                != candidate.get("model_class", candidate["damage_type"])
+            ):
+                continue
+            if abs((other.get("frame_number") or 0) - (candidate.get("frame_number") or 0)) == 0:
+                continue
+            candidate_time = candidate.get("timestamp_seconds")
+            other_time = other.get("timestamp_seconds")
+            if (
+                candidate_time is not None and other_time is not None
+                and abs(float(other_time) - float(candidate_time)) > max_gap_seconds
+            ):
+                continue
+            if _iou(candidate["bbox"], other["bbox"]) >= iou_threshold:
+                nearby += 1
+        if nearby >= required_frames:
+            candidate["temporal_confirmed"] = True
+            confirmed.append(candidate)
+    return confirmed
+
+
 def process_frames_with_metadata(
     frames_folder="frames",
     metadata_path="frames/frame_metadata.json",
@@ -239,6 +346,12 @@ def process_frames_with_metadata(
     gps_data_path=None,
     road_context=None,
     traffic_factor=None,
+    minimum_confidence=None,
+    temporal_confirmation_frames=1,
+    temporal_iou_threshold=0.10,
+    max_gps_time_difference_seconds=5.0,
+    preprocess_frames=False,
+    preprocessing_size=512,
 ):
     """Process usable extracted frames and save all detections to JSON.
 
@@ -253,7 +366,7 @@ def process_frames_with_metadata(
     output_folder.mkdir(parents=True, exist_ok=True)
     metadata = _load_frame_metadata(metadata_path)
 
-    all_detections = []
+    candidate_detections = []
     usable_frame_count = 0
     skipped_frames = []
 
@@ -275,7 +388,10 @@ def process_frames_with_metadata(
             continue
 
         usable_frame_count += 1
-        boxes, annotated = _image_detections(frame_path)
+        boxes, annotated, diagnostics = _image_detections(
+            frame_path, minimum_confidence, preprocess=preprocess_frames,
+            preprocessing_size=preprocessing_size,
+        )
         if annotated is None:
             skipped_frames.append(f"unreadable frame: {frame_name}")
             continue
@@ -288,15 +404,31 @@ def process_frames_with_metadata(
         timestamp_seconds = frame_metadata.get("timestamp_seconds")
         for box in boxes:
             analysis = _analysis_fields(box, road_context, traffic_factor)
-            all_detections.append(
+            candidate_detections.append(
                 {
-                    "id": len(all_detections) + 1,
                     "frame": frame_name,
                     "frame_number": frame_number,
                     "timestamp_seconds": timestamp_seconds,
                     "class_id": box["class_id"],
                     "damage_type": box["damage_type"],
+                    "model_class": box["model_class"],
                     "confidence": box["confidence"],
+                    "threshold_used": box["threshold_used"],
+                    "accepted": True,
+                    "detection_group": box["detection_group"],
+                    "damage_category": box["damage_category"],
+                    "damage_subtype": box["damage_subtype"],
+                    "damage_model_used": box.get("damage_model_used", False),
+                    "damage_refinement_status": box.get("damage_refinement_status"),
+                    "rad_class_id": box.get("rad_class_id"),
+                    "rad_confidence": box.get("rad_confidence"),
+                    "damage_model_class_id": box.get("damage_model_class_id"),
+                    "damage_model_confidence": box.get("damage_model_confidence"),
+                    "damage_model_match_iou": box.get("damage_model_match_iou"),
+                    "occlusion_flag": box["occlusion_flag"],
+                    "occlusion_reason": box["occlusion_reason"],
+                    "occlusion_indicator_quality": box["occlusion_indicator_quality"],
+                    "preprocessing": box["preprocessing"],
                     **analysis,
                     "bbox": box["bbox"],
                     "bbox_width": box["bbox_width"],
@@ -308,8 +440,22 @@ def process_frames_with_metadata(
                 }
             )
 
+    all_detections = _temporally_confirm(
+        candidate_detections,
+        required_frames=max(1, int(temporal_confirmation_frames)),
+        iou_threshold=float(temporal_iou_threshold),
+    )
+    for identifier, detection in enumerate(all_detections, start=1):
+        detection["id"] = identifier
+        detection.setdefault("temporal_confirmed", temporal_confirmation_frames <= 1)
+
     gps_records = load_gps_records(gps_data_path)
-    all_detections = enrich_detections_with_gps(all_detections, gps_records)
+    all_detections = enrich_detections_with_gps(
+        all_detections,
+        gps_records,
+        max_time_difference_seconds=max_gps_time_difference_seconds,
+        gps_source="External GPS file" if gps_data_path else None,
+    )
 
     detections_path = output_folder / "detections.json"
     with open(detections_path, "w", encoding="utf-8") as file:
@@ -344,6 +490,72 @@ def process_all_images(image_folder="frames", output_folder="results"):
     for image_path in sorted(image_files):
         all_results.extend(detect_image(image_path, output_folder))
     return all_results
+
+
+def process_single_image(
+    image_path,
+    output_folder="results",
+    road_context=None,
+    traffic_factor=None,
+    minimum_confidence=None,
+    gps_data=None,
+    preprocess=False,
+    preprocessing_size=512,
+):
+    """Analyze one still image into the same record schema used by video.
+
+    ``gps_data`` is expected to come from embedded EXIF extraction. An external
+    timestamped GPS log is intentionally not guessed onto a still image.
+    """
+    image_path = Path(image_path)
+    output_folder = Path(output_folder)
+    output_folder.mkdir(parents=True, exist_ok=True)
+    boxes, annotated, diagnostics = _image_detections(
+        image_path, minimum_confidence, preprocess=preprocess,
+        preprocessing_size=preprocessing_size,
+    )
+    if annotated is None:
+        raise ValueError(f"Could not read image: {image_path}")
+    annotated_path = output_folder / image_path.name
+    if not cv2.imwrite(str(annotated_path), annotated):
+        raise OSError(f"Could not save annotated image: {annotated_path}")
+
+    unavailable_gps = {
+        "latitude": None,
+        "longitude": None,
+        "gps_timestamp": None,
+        "gps_match_method": "unavailable",
+        "gps_time_difference_seconds": None,
+        "gps_source": "Unavailable",
+    }
+    gps_data = gps_data or unavailable_gps
+    detections = []
+    for identifier, box in enumerate(boxes, start=1):
+        analysis = _analysis_fields(box, road_context, traffic_factor)
+        detections.append(
+            {
+                "id": identifier,
+                "frame": image_path.name,
+                "frame_number": None,
+                "timestamp_seconds": None,
+                "class_id": box["class_id"],
+                "damage_type": box["damage_type"],
+                "model_class": box["model_class"],
+                "confidence": box["confidence"],
+                "threshold_used": box["threshold_used"],
+                "accepted": True,
+                "detection_group": box["detection_group"],
+                "damage_category": box["damage_category"],
+                "damage_subtype": box["damage_subtype"],
+                **analysis,
+                **box,
+                **gps_data,
+                "temporal_confirmed": "not_applicable_image",
+            }
+        )
+    with open(output_folder / "detections.json", "w", encoding="utf-8") as file:
+        json.dump(detections, file, indent=2)
+    return detections, diagnostics
 
 
 if __name__ == "__main__":

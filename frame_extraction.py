@@ -14,6 +14,7 @@ import cv2
 DEFAULT_BLUR_THRESHOLD = 40.0
 DEFAULT_MIN_BRIGHTNESS = 40.0
 DEFAULT_MAX_BRIGHTNESS = 215.0
+SUPPORTED_VIDEO_EXTENSIONS = {".mp4", ".mov", ".avi", ".mkv"}
 
 
 def assess_frame_quality(
@@ -78,7 +79,7 @@ def extract_frames(
     min_brightness=DEFAULT_MIN_BRIGHTNESS,
     max_brightness=DEFAULT_MAX_BRIGHTNESS,
 ):
-    """Extract sampled MP4 frames and write their metadata as JSON.
+    """Extract sampled locally readable video frames and write metadata as JSON.
 
     Choose one sampling method: ``every_n_frames`` or ``every_seconds``.
     The default saves one frame per second. Every sampled frame is written even
@@ -90,8 +91,9 @@ def extract_frames(
     video_path = Path(video_path)
     output_folder = Path(output_folder)
 
-    if video_path.suffix.lower() != ".mp4":
-        raise ValueError("RoadSense frame extraction accepts MP4 video files.")
+    if video_path.suffix.lower() not in SUPPORTED_VIDEO_EXTENSIONS:
+        supported = ", ".join(sorted(SUPPORTED_VIDEO_EXTENSIONS))
+        raise ValueError(f"Unsupported video format. Supported formats: {supported}.")
     if not video_path.is_file():
         raise FileNotFoundError(f"Video file not found: {video_path}")
     if every_n_frames is not None and every_seconds is not None:
@@ -197,9 +199,9 @@ def extract_frames(
 
 def _parse_arguments():
     parser = argparse.ArgumentParser(
-        description="Extract sampled frames from an MP4 dashcam video."
+        description="Extract sampled frames from a locally readable dashcam video."
     )
-    parser.add_argument("video", type=Path, help="Path to an MP4 dashcam video.")
+    parser.add_argument("video", type=Path, help="Path to a dashcam video.")
     parser.add_argument("--output-folder", type=Path, default=Path("frames"))
     sampling_group = parser.add_mutually_exclusive_group()
     sampling_group.add_argument("--every-frames", type=int, help="Save one frame every N frames.")

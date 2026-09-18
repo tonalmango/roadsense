@@ -1,0 +1,156 @@
+{
+  "source": "D:\\21431547\\RDD2022_released_through_CRDDC2022\\RDD2022",
+  "annotation_format": "Pascal VOC XML",
+  "known_classes": [
+    "D00",
+    "D10",
+    "D20",
+    "D40"
+  ],
+  "countries": {
+    "China_Drone": {
+      "root": "D:\\21431547\\RDD2022_released_through_CRDDC2022\\RDD2022\\China_Drone\\China_Drone",
+      "train_images": 2401,
+      "train_annotations": 2401,
+      "test_images": 0,
+      "class_instances": {
+        "D10": 1263,
+        "D00": 1426,
+        "D20": 293,
+        "D40": 86
+      },
+      "class_images": {
+        "D10": 1023,
+        "D00": 1034,
+        "D20": 264,
+        "D40": 64
+      }
+    },
+    "China_MotorBike": {
+      "root": "D:\\21431547\\RDD2022_released_through_CRDDC2022\\RDD2022\\China_MotorBike\\China_MotorBike",
+      "train_images": 1977,
+      "train_annotations": 1977,
+      "test_images": 500,
+      "class_instances": {
+        "D20": 641,
+        "D00": 2678,
+        "D40": 235,
+        "D10": 1096
+      },
+      "class_images": {
+        "D20": 486,
+        "D00": 1419,
+        "D40": 164,
+        "D10": 738
+      }
+    },
+    "Czech": {
+      "root": "D:\\21431547\\RDD2022_released_through_CRDDC2022\\RDD2022\\Czech\\Czech",
+      "train_images": 2829,
+      "train_annotations": 2829,
+      "test_images": 709,
+      "class_instances": {
+        "D00": 988,
+        "D40": 197,
+        "D10": 399,
+        "D20": 161
+      },
+      "class_images": {
+        "D00": 764,
+        "D10": 300,
+        "D40": 154,
+        "D20": 129
+      }
+    },
+    "India": {
+      "root": "D:\\21431547\\RDD2022_released_through_CRDDC2022\\RDD2022\\India\\India",
+      "train_images": 7706,
+      "train_annotations": 7706,
+      "test_images": 1959,
+      "class_instances": {
+        "D40": 3187,
+        "D00": 1555,
+        "D20": 2021,
+        "D10": 68
+      },
+      "class_images": {
+        "D40": 1530,
+        "D00": 1109,
+        "D20": 1758,
+        "D10": 60
+      }
+    },
+    "Japan": {
+      "root": "D:\\21431547\\RDD2022_released_through_CRDDC2022\\RDD2022\\Japan\\Japan",
+      "train_images": 10506,
+      "train_annotations": 10506,
+      "test_images": 2627,
+      "class_instances": {
+        "D20": 6198,
+        "D40": 2243,
+        "D10": 3979,
+        "D00": 4049
+      },
+      "class_images": {
+        "D20": 4714,
+        "D00": 2797,
+        "D10": 2240,
+        "D40": 1390
+      }
+    },
+    "Norway": {
+      "root": "D:\\21431547\\RDD2022_released_through_CRDDC2022\\RDD2022\\Norway\\Norway",
+      "train_images": 8161,
+      "train_annotations": 8161,
+      "test_images": 2040,
+      "class_instances": {
+        "D00": 8570,
+        "D20": 468,
+        "D40": 461,
+        "D10": 1730
+      },
+      "class_images": {
+        "D20": 322,
+        "D00": 2518,
+        "D40": 256,
+        "D10": 1006
+      }
+    },
+    "United_States": {
+      "root": "D:\\21431547\\RDD2022_released_through_CRDDC2022\\RDD2022\\United_States\\United_States",
+      "train_images": 4805,
+      "train_annotations": 4805,
+      "test_images": 1200,
+      "class_instances": {
+        "D10": 3295,
+        "D00": 6750,
+        "D20": 834,
+        "D40": 135
+      },
+      "class_images": {
+        "D10": 2342,
+        "D00": 3907,
+        "D20": 739,
+        "D40": 116
+      }
+    }
+  },
+  "class_instances": {
+    "D10": 11830,
+    "D00": 26016,
+    "D20": 10616,
+    "D40": 6544
+  },
+  "class_images": {
+    "D10": 7709,
+    "D00": 13548,
+    "D20": 8412,
+    "D40": 3674
+  },
+  "missing_images": [],
+  "malformed_annotations": [],
+  "invalid_boxes": 1,
+  "publisher_train_images": 38385,
+  "publisher_train_annotations": 38385,
+  "publisher_test_images": 9035
+}

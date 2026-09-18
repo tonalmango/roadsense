@@ -1,6 +1,6 @@
 """Prototype, explainable RoadDamages repair-prioritisation heuristic."""
 
-from severity import ROAD_DAMAGE_CLASS
+from severity import REPAIR_DAMAGE_CLASSES, ROAD_DAMAGE_CLASS
 
 
 # Configurable prototype weights. They sum to 1.0 (100% of priority score).
@@ -10,7 +10,7 @@ ROAD_CONTEXT_WEIGHT = 0.12
 TRAFFIC_WEIGHT = 0.08
 
 # Prototype risk values: not measured traffic, crash, or repair data.
-DAMAGE_TYPE_RISK = {"roaddamages": 100.0}
+DAMAGE_TYPE_RISK = {name.lower(): 100.0 for name in REPAIR_DAMAGE_CLASSES}
 
 # Optional contextual inputs. Supplying a category is a user/context decision,
 # not a claim that RoadSense measured the road category or traffic level.
@@ -77,10 +77,10 @@ def prioritize_repair(
     All inputs are normalized to 0--100. ``road_context`` and
     ``traffic_factor`` are optional contextual inputs; omitted values use a
     neutral 50-point baseline and are clearly stated in the reason. They are
-    never presented as data measured by this project. Other RAD classes are
-    contextual objects/features, not repair defects, and return N/A fields.
+    never presented as data measured by this project. Contextual RAD classes
+    are not repair defects and return N/A fields.
     """
-    if str(damage_type or "").lower() != ROAD_DAMAGE_CLASS.lower():
+    if str(damage_type or "").lower() not in DAMAGE_TYPE_RISK:
         return {
             "priority_score": None,
             "priority_level": "N/A",
