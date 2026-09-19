@@ -309,9 +309,17 @@ def _render_evidence(detections, results_folder):
         return
 
     detections_by_id = {item["id"]: item for item in detections}
+    evidence_ids = sorted(
+        detections_by_id,
+        key=lambda item_id: (
+            detections_by_id[item_id].get("priority_score") is None,
+            -(detections_by_id[item_id].get("priority_score") or 0),
+            item_id,
+        ),
+    )
     selected_id = st.selectbox(
         "Detection evidence record",
-        options=list(detections_by_id),
+        options=evidence_ids,
         format_func=lambda item_id: (
             f"#{item_id} | {detections_by_id[item_id]['damage_type']} | "
             f"{_format_timestamp(detections_by_id[item_id].get('timestamp_seconds'))}"
