@@ -19,6 +19,9 @@ RAD_CLASS_NAMES = {
 RDD2022_CLASS_NAMES = {
     0: "D00", 1: "D10", 2: "D20", 3: "D40",
 }
+POTHOLE_CLASS_NAMES = {
+    0: "Pothole", 1: "Crack", 2: "Manhole",
+}
 
 # These descriptions follow the official RDD2022 labels. They are distinct
 # from RAD and are retained as subtype metadata, not silently discarded.
@@ -66,12 +69,26 @@ MODEL_PROFILES = {
         "confidence_thresholds": {name: 0.25 for name in RDD2022_CLASS_NAMES.values()},
         "road_condition_classes": set(RDD2022_CLASS_NAMES.values()),
     },
+    "pothole": {
+        "path": PROJECT_ROOT / "model" / "best.pt",
+        "class_names": POTHOLE_CLASS_NAMES,
+        "confidence_thresholds": {name: 0.25 for name in POTHOLE_CLASS_NAMES.values()},
+        "road_condition_classes": set(POTHOLE_CLASS_NAMES.values()),
+    },
 }
 
 
 def active_model_profile():
-    """Return the requested profile; RAD remains safe default behavior."""
-    name = os.environ.get("ROADSENSE_MODEL_PROFILE", "rad").strip().lower()
+    """Return the requested profile, using the local compatible model if needed."""
+    requested = os.environ.get("ROADSENSE_MODEL_PROFILE", "").strip().lower()
+    if requested:
+        name = requested
+    elif MODEL_PROFILES["rad"]["path"].is_file():
+        name = "rad"
+    elif MODEL_PROFILES["pothole"]["path"].is_file():
+        name = "pothole"
+    else:
+        name = "rad"
     if name not in MODEL_PROFILES:
         raise ValueError(
             f"Unknown ROADSENSE_MODEL_PROFILE={name!r}. "

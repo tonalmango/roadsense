@@ -16,6 +16,67 @@ def _write_json(path, content):
         json.dump(content, file, indent=2)
 
 
+def _build_intelligence_artifacts(detections, results_folder, usable_inputs, total_inputs, gps_records=None):
+    """Run the model-agnostic intelligence layer over pipeline detections."""
+    from active_learning import select_feedback_samples
+    from confidence_calibration import calibration_summary, expected_calibration_error
+    from data_quality import assess_data_quality, quality_flags
+    from evidence_cards import build_evidence_cards, summarize_evidence
+    from explainable_risk import explain_detection
+    from health_score import calculate_health_score
+    from inspection_comparison import compare_inspections
+    from inspection_report import create_pdf_report
+    from mission_replay import mission_summary, replay_mission
+    from repair_queue import build_repair_queue
+    from segment_analytics import analyze_segments
+    from temporal_tracking import build_tracks, suppress_duplicates
+
+    tracked = [{**item, **explain_detection(item)} for item in build_tracks(detections)]
+    unique = suppress_duplicates(tracked)
+    health = calculate_health_score(unique, usable_inputs, total_inputs)
+    quality = assess_data_quality(unique, gps_records)
+    evidence_cards = build_evidence_cards(unique)
+    replay = replay_mission(unique)
+    quality = assess_data_quality(unique, gps_records)
+    labeled_records = [item for item in unique if "correct" in item]
+    summary = {
+        "health_score": health,
+        "data_quality": quality,
+        "data_quality_flags": quality_flags(quality),
+        "evidence_cards": evidence_cards,
+        "evidence_summary": summarize_evidence(evidence_cards),
+        "repair_queue": build_repair_queue(unique),
+        "segments": analyze_segments(unique),
+        "mission_replay": replay,
+        "mission_summary": mission_summary(replay),
+        "active_learning": select_feedback_samples(unique),
+        "confidence_calibration": calibration_summary(labeled_records),
+        "confidence_calibration_error": expected_calibration_error(labeled_records),
+        "comparison_baseline": compare_inspections([], unique),
+        "unique_detection_count": len(unique),
+        "suppressed_detection_count": len(detections) - len(unique),
+    }
+    results_folder = Path(results_folder)
+    _write_json(results_folder / "intelligence_summary.json", summary)
+    _write_json(results_folder / "evidence_cards.json", summary["evidence_cards"])
+    _write_json(results_folder / "repair_queue.json", summary["repair_queue"])
+    _write_json(results_folder / "segment_analytics.json", summary["segments"])
+    _write_json(results_folder / "mission_replay.json", summary["mission_replay"])
+    try:
+        create_pdf_report(
+            results_folder / "inspection_report.pdf",
+            "RoadSense Inspection Report",
+            unique,
+            summary=health,
+        )
+        summary["pdf_report"] = "inspection_report.pdf"
+    except RuntimeError as error:
+        summary["pdf_report"] = None
+        summary["pdf_report_error"] = str(error)
+    _write_json(results_folder / "intelligence_summary.json", summary)
+    return tracked, summary
+
+
 def _statistics(video_path, frame_metadata, detections, elapsed_seconds):
     sampled_frames = len(frame_metadata.get("frames", []))
     usable_frames = sum(
@@ -69,7 +130,7 @@ def run_pipeline(
         # pipeline failure instead of preventing even the command help screen.
         from detection import CLASS_CONFIDENCE_THRESHOLDS, process_frames_with_metadata
         from frame_extraction import extract_frames
-        from gps_mapping import inspect_video_embedded_gps
+        from gps_mapping import inspect_video_embedded_gps, load_gps_records
 
         print("[1/6] Extracting frames...")
         frame_metadata = extract_frames(
@@ -107,6 +168,13 @@ def run_pipeline(
             preprocessing_size=preprocessing_size,
         )
 
+        detections, intelligence = _build_intelligence_artifacts(
+            detections,
+            results_folder,
+            usable_frames,
+            sampled_frames,
+            load_gps_records(gps_data_path),
+        )
         _write_json(final_path, detections)
         elapsed_seconds = time.perf_counter() - started_at
         statistics = _statistics(video_path, frame_metadata, detections, elapsed_seconds)
@@ -121,6 +189,7 @@ def run_pipeline(
                 "preprocessing_size": preprocessing_size if preprocess_frames else None,
                 "gps_source": "External GPS file" if gps_data_path else "Unavailable",
                 "embedded_video_gps": telemetry,
+                "intelligence_summary": str(results_folder / "intelligence_summary.json"),
             }
         )
         _write_json(statistics_path, statistics)
@@ -206,6 +275,13 @@ def run_image_pipeline(
             for detection in detections:
                 detection["capture_date"] = capture_date
             _write_json(results_folder / "detections.json", detections)
+        detections, intelligence = _build_intelligence_artifacts(
+            detections,
+            results_folder,
+            int(quality["usable"]),
+            1,
+            [],
+        )
         _write_json(final_path, detections)
         elapsed = time.perf_counter() - started_at
         statistics = {
@@ -222,6 +298,7 @@ def run_image_pipeline(
             "explicit_preprocessing": bool(preprocess),
             "preprocessing_size": preprocessing_size if preprocess else None,
             "external_gps_ignored": bool(gps_data_path),
+            "intelligence_summary": str(results_folder / "intelligence_summary.json"),
             "processing_time_seconds": round(elapsed, 3),
         }
         _write_json(statistics_path, statistics)

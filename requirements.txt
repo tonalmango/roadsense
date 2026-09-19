@@ -5,3 +5,4 @@ opencv-python>=4.8
 pandas>=2.0
 pydeck>=0.9
 Pillow>=10.0
+reportlab>=4.0

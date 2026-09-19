@@ -29,13 +29,43 @@ python pipeline.py videos\demo_road.mp4 --gps-data gps\demo_gps.csv --every-seco
 Outputs are written per run under `results/runs/<run_id>/` in the dashboard, or
 to the requested folders for the command-line pipeline.
 
+## Road intelligence modules
+
+The JSON detection records can be passed to these focused capabilities:
+
+| Capability | Module |
+| --- | --- |
+| Temporal tracking and duplicate suppression | `temporal_tracking.py` |
+| Pothole/road-damage evidence cards | `evidence_cards.py` |
+| Road-condition health score | `health_score.py` |
+| Smart repair queue | `repair_queue.py` |
+| Road segment analytics | `segment_analytics.py` |
+| Inspection comparison | `inspection_comparison.py` |
+| Explainable severity and risk | `explainable_risk.py` |
+| Confidence calibration | `confidence_calibration.py` |
+| Mission replay | `mission_replay.py` |
+| PDF inspection report | `inspection_report.py` |
+| GPS/data-quality layer | `data_quality.py` |
+| Active-learning feedback selection | `active_learning.py` |
+
+These modules are deliberately model-agnostic and return JSON-serializable
+objects, so they can be called from the Streamlit dashboard, batch scripts, or
+future API endpoints. `create_pdf_report` requires the `reportlab` dependency.
+
 ## Active model profiles
 
-The default profile is configured in `model_config.py` and currently expects:
+The default profile is configured in `model_config.py`. It uses the RAD model
+when available, and automatically uses the compatible local `model/best.pt`
+profile when the RAD checkpoint is not present. The available local fallback
+contains `Pothole`, `Crack`, and `Manhole` classes; it is not silently treated
+as the six-class RAD model.
 
 ```text
 training\rad_yolo11m\weights\best.pt
 ```
+
+To explicitly select a profile, set `ROADSENSE_MODEL_PROFILE=rad`,
+`ROADSENSE_MODEL_PROFILE=pothole`, or `ROADSENSE_MODEL_PROFILE=rdd2022`.
 
 The RAD class taxonomy is:
 

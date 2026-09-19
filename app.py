@@ -29,58 +29,76 @@ st.set_page_config(page_title="RoadSense | Road Condition Intelligence", page_ic
 
 
 def _inject_console_style():
-    """Apply a restrained operations-console visual layer to Streamlit."""
+    """Apply the RoadSense visual system without changing dashboard behavior."""
     st.markdown(
         """
         <style>
-        :root { --rs-accent:#58b7c4; --rs-panel:#14191e; --rs-line:#29343d;
-                --rs-text:#f1f4f5; --rs-muted:#9ba7af; }
-        .stApp { background:#0b0e11; color:var(--rs-text); }
-        [data-testid="stHeader"] { background:rgba(11,14,17,.92); }
-        section[data-testid="stSidebar"] { background:#10151a; border-right:1px solid var(--rs-line); }
-        section[data-testid="stSidebar"] > div { padding-top:1.2rem; }
-        h1, h2, h3 { color:var(--rs-text); letter-spacing:-.02em; }
-        div[data-testid="stMetric"] { background:var(--rs-panel); border:1px solid var(--rs-line);
-          border-radius:4px; padding:.8rem .9rem; }
-        div[data-testid="stMetricLabel"] { color:var(--rs-muted); font-size:.68rem;
-          font-weight:700; letter-spacing:.09em; text-transform:uppercase; }
-        div[data-testid="stMetricValue"] { color:var(--rs-text); font-size:1.65rem; }
-        .rs-kicker { color:var(--rs-accent); font-size:.71rem; font-weight:700;
-          letter-spacing:.14em; text-transform:uppercase; margin-bottom:.35rem; }
-        .rs-title { color:var(--rs-text); font-size:2.25rem; font-weight:760;
-          line-height:1; letter-spacing:.03em; margin:0; }
-        .rs-subtitle { color:var(--rs-muted); font-size:.93rem; margin-top:.42rem; }
-        .rs-status { display:inline-block; color:#a9e1d7; border:1px solid #28645d;
-          background:#11231f; border-radius:2px; padding:.24rem .48rem; font-size:.65rem;
-          font-weight:700; letter-spacing:.09em; text-transform:uppercase; }
-        .rs-panel { background:var(--rs-panel); border:1px solid var(--rs-line); border-radius:5px;
-          padding:1rem 1.05rem; margin:.35rem 0 1rem 0; }
-        .rs-section-label { color:var(--rs-accent); font-size:.68rem; font-weight:700;
-          letter-spacing:.13em; text-transform:uppercase; margin-bottom:.26rem; }
-        .rs-section-title { color:var(--rs-text); font-size:1.25rem; font-weight:680; margin:0; }
-        .rs-section-copy { color:var(--rs-muted); font-size:.82rem; margin:.3rem 0 0; }
-        .rs-flow { display:flex; flex-wrap:wrap; align-items:center; gap:.45rem; color:#b8c2c8;
-          font-size:.68rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; }
-        .rs-flow-step { border:1px solid var(--rs-line); background:#10151a; padding:.42rem .55rem; border-radius:3px; }
-        .rs-flow-arrow { color:var(--rs-accent); }
-        .rs-data-label { color:var(--rs-muted); font-size:.65rem; font-weight:700;
-          letter-spacing:.1em; text-transform:uppercase; margin-bottom:.16rem; }
-        .rs-data-value { color:var(--rs-text); font-size:1rem; font-weight:650; margin-bottom:.75rem; }
-        .rs-chip { display:inline-block; padding:.24rem .45rem; margin:.1rem .18rem .1rem 0;
-          border-radius:2px; font-size:.68rem; font-weight:700; letter-spacing:.05em; }
-        .rs-chip-minor { color:#a9d9b4; background:#173022; border:1px solid #326342; }
-        .rs-chip-moderate { color:#f4d18b; background:#362a13; border:1px solid #785b25; }
-        .rs-chip-severe { color:#f1aaa2; background:#371917; border:1px solid #7f3530; }
-        .rs-chip-na { color:#b4bec4; background:#20272d; border:1px solid #3b474f; }
-        .rs-empty { border:1px dashed #3a464e; background:#10151a; padding:1.4rem; border-radius:4px;
-          color:var(--rs-muted); text-align:center; }
-        .rs-priority-row { border-left:3px solid var(--rs-accent); background:#11171c;
-          border-top:1px solid var(--rs-line); border-right:1px solid var(--rs-line);
-          border-bottom:1px solid var(--rs-line); padding:.7rem .8rem; margin:.45rem 0; }
-        .stButton > button { width:100%; border-radius:3px; border:1px solid #5bb9c5;
-          background:#1d5862; color:#f5fbfc; font-weight:700; letter-spacing:.06em; text-transform:uppercase; }
-        .stButton > button:hover { border-color:#82d2dc; background:#236b75; color:white; }
-        div[data-baseweb="select"] > div, div[data-baseweb="input"] > div { background:#10151a; border-color:#34424b; }
+                :root { --rs-ink:#142b45; --rs-muted:#687786; --rs-paper:#f5f7fb;
+                    --rs-panel:#ffffff; --rs-line:#d9e2ec; --rs-accent:#1769aa; --rs-lime:#f4c95d;
+                    --rs-coral:#e76f51; }
+                .stApp { background:var(--rs-paper); color:var(--rs-ink); }
+                [data-testid="stHeader"] { background:rgba(245,247,251,.9); }
+                [data-testid="stAppViewContainer"] { background:var(--rs-paper); }
+                section[data-testid="stSidebar"] { background:#e8eef6; border-right:1px solid #cedbe8; }
+                section[data-testid="stSidebar"] > div { padding-top:1.35rem; }
+                .stApp, .stApp p, .stApp span, .stApp label, .stApp li,
+                [data-testid="stMarkdownContainer"], [data-testid="stMarkdownContainer"] p,
+                [data-testid="stCaptionContainer"], section[data-testid="stSidebar"] label {
+                    color:var(--rs-ink) !important;
+                }
+                [data-testid="stCaptionContainer"], .stCaption, .stApp small {
+                    color:var(--rs-muted) !important;
+                }
+                section[data-testid="stSidebar"] p, section[data-testid="stSidebar"] span,
+                section[data-testid="stSidebar"] label { color:var(--rs-ink) !important; }
+                h1, h2, h3 { color:var(--rs-ink); letter-spacing:-.025em; }
+                div[data-testid="stMetric"] { background:var(--rs-panel); border:1px solid var(--rs-line);
+                    border-radius:12px; padding:1rem 1.05rem; box-shadow:0 5px 18px rgba(23,37,43,.05); }
+                div[data-testid="stMetricLabel"] { color:var(--rs-muted); font-size:.65rem;
+                    font-weight:800; letter-spacing:.1em; text-transform:uppercase; }
+                div[data-testid="stMetricValue"] { color:var(--rs-ink); font-size:1.7rem; font-weight:760; }
+                .rs-kicker { color:var(--rs-accent); font-size:.7rem; font-weight:800;
+                    letter-spacing:.16em; text-transform:uppercase; margin-bottom:.4rem; }
+                .rs-title { color:var(--rs-ink); font-size:2.55rem; font-weight:850;
+                    line-height:.98; letter-spacing:-.035em; margin:0; }
+                .rs-subtitle { color:var(--rs-muted); font-size:.95rem; margin-top:.55rem; }
+                .rs-status { display:inline-block; color:#17527e; border:1px solid #a9c8e2;
+                    background:#e3f0fb; border-radius:999px; padding:.3rem .65rem; font-size:.65rem;
+                    font-weight:800; letter-spacing:.09em; text-transform:uppercase; }
+                .rs-panel { background:var(--rs-panel); border:1px solid var(--rs-line); border-radius:14px;
+                    padding:1.1rem 1.15rem; margin:.45rem 0 1.1rem 0; box-shadow:0 7px 24px rgba(23,37,43,.045); }
+                .rs-section-label { color:var(--rs-accent); font-size:.67rem; font-weight:800;
+                    letter-spacing:.14em; text-transform:uppercase; margin-bottom:.3rem; }
+                .rs-section-title { color:var(--rs-ink); font-size:1.32rem; font-weight:800; margin:0; }
+                .rs-section-copy { color:var(--rs-muted); font-size:.83rem; margin:.35rem 0 0; }
+                .rs-flow { display:flex; flex-wrap:wrap; align-items:center; gap:.5rem; color:var(--rs-muted);
+                    font-size:.67rem; font-weight:800; letter-spacing:.06em; text-transform:uppercase; }
+                .rs-flow-step { border:1px solid #c6d7e8; background:#edf5fc; padding:.45rem .62rem; border-radius:999px; }
+                .rs-flow-arrow { color:var(--rs-lime); font-weight:900; }
+                .rs-data-label { color:var(--rs-muted); font-size:.64rem; font-weight:800;
+                    letter-spacing:.1em; text-transform:uppercase; margin-bottom:.18rem; }
+                .rs-data-value { color:var(--rs-ink); font-size:1rem; font-weight:750; margin-bottom:.8rem; }
+                .rs-chip { display:inline-block; padding:.28rem .55rem; margin:.1rem .18rem .1rem 0;
+                    border-radius:999px; font-size:.67rem; font-weight:800; letter-spacing:.05em; }
+                .rs-chip-minor { color:#17634f; background:#def3eb; border:1px solid #a7d9c9; }
+                .rs-chip-moderate { color:#8a5b08; background:#fff1c7; border:1px solid #efd486; }
+                .rs-chip-severe { color:#a23d31; background:#ffe1da; border:1px solid #f0afa3; }
+                .rs-chip-na { color:#5f7074; background:#edf1f6; border:1px solid #d3dce7; }
+                .rs-empty { border:1px dashed #b7c9da; background:#eef4fa; padding:1.6rem; border-radius:12px;
+                    color:var(--rs-muted); text-align:center; }
+                .rs-priority-row { border-left:4px solid var(--rs-coral); background:#fff;
+                    border-top:1px solid var(--rs-line); border-right:1px solid var(--rs-line);
+                    border-bottom:1px solid var(--rs-line); border-radius:0 10px 10px 0; padding:.75rem .9rem; margin:.5rem 0; box-shadow:0 3px 12px rgba(23,37,43,.04); }
+                .stButton > button { width:100%; border-radius:999px; border:1px solid var(--rs-accent);
+                    background:var(--rs-accent); color:white; font-weight:800; letter-spacing:.06em; text-transform:uppercase; }
+                .stButton > button:hover { border-color:#05645b; background:#05645b; color:white; }
+                div[data-baseweb="select"] > div, div[data-baseweb="input"] > div { background:#fff; border-color:#c4d3e2; border-radius:8px; }
+                div[data-baseweb="select"] *, div[data-baseweb="input"] input,
+                div[data-baseweb="input"] textarea { color:var(--rs-ink) !important; -webkit-text-fill-color:var(--rs-ink) !important; }
+                div[data-testid="stDataFrame"] { border:1px solid var(--rs-line); }
+                div[data-testid="stTabs"] button[role="tab"] { color:var(--rs-muted); font-weight:750; }
+                div[data-testid="stTabs"] button[role="tab"][aria-selected="true"] { color:var(--rs-accent); }
+                @media (max-width: 760px) { .rs-title { font-size:2rem; } .rs-panel { padding:.9rem; border-radius:10px; } }
         </style>
         """,
         unsafe_allow_html=True,
@@ -139,6 +157,8 @@ def _run_analysis(media_file, gps_file, sampling_interval, road_context, traffic
         "gps_path": str(gps_path) if gps_path else None,
         "media_type": "image" if is_image else "video",
         "detections": _load_json(result["final_detections_path"]),
+        "intelligence": _load_json(results_folder / "intelligence_summary.json")
+        if (results_folder / "intelligence_summary.json").is_file() else {},
     }
 
 
@@ -298,7 +318,7 @@ def _render_map(detections, gps_path):
                 )
             },
         ),
-        width="stretch",
+        use_container_width=True,
     )
 
 
@@ -323,7 +343,7 @@ def _render_evidence(detections, results_folder):
     left, right = st.columns([1.5, 1])
     with left:
         if image_path.is_file():
-            st.image(str(image_path), caption=f"Annotated evidence | {selected['frame']}", width="stretch")
+            st.image(str(image_path), caption=f"Annotated evidence | {selected['frame']}", use_column_width=True)
         else:
             st.markdown('<div class="rs-empty"><b>EVIDENCE IMAGE UNAVAILABLE</b><br/>The JSON record remains available, but its annotated frame file was not found.</div>', unsafe_allow_html=True)
     with right:
@@ -370,7 +390,7 @@ def _render_detection_feed(detections):
         for item in sorted(detections, key=lambda item: item.get("timestamp_seconds") or 0)
     ]
     if rows:
-        st.dataframe(pd.DataFrame(rows), width="stretch", hide_index=True)
+        st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True)
     else:
         st.markdown('<div class="rs-empty"><b>NO DETECTIONS MATCH FILTERS</b><br/>Adjust severity, class, or priority filters to review additional records.</div>', unsafe_allow_html=True)
 
@@ -427,7 +447,7 @@ def _render_quality_and_traceability(run_data, detections):
         gps_methods = pd.Series([item.get("gps_match_method", "unavailable") for item in detections]).value_counts()
         if not gps_methods.empty:
             st.write("GPS match methods")
-            st.dataframe(gps_methods.rename_axis("method").reset_index(name="detections"), width="stretch", hide_index=True)
+            st.dataframe(gps_methods.rename_axis("method").reset_index(name="detections"), use_container_width=True, hide_index=True)
 
         final_path = Path(run_data["final_detections_path"])
         statistics_path = Path(run_data["statistics_path"])
@@ -442,6 +462,40 @@ def _render_quality_and_traceability(run_data, detections):
                 "Download processing statistics", statistics_path.read_bytes(),
                 file_name="processing_statistics.json", mime="application/json",
             )
+        report_path = results_folder / "inspection_report.pdf"
+        if report_path.is_file():
+            st.download_button(
+                "Download PDF inspection report", report_path.read_bytes(),
+                file_name="inspection_report.pdf", mime="application/pdf",
+            )
+
+
+def _render_intelligence(run_data):
+    """Show outputs generated by the integrated intelligence layer."""
+    intelligence = run_data.get("intelligence", {})
+    if not intelligence:
+        return
+    health = intelligence.get("health_score", {})
+    quality = intelligence.get("data_quality", {})
+    _section_heading("ROAD INTELLIGENCE", "Inspection decision layer", "Derived from this run's detections, timestamps, GPS coverage, and confidence values.")
+    columns = st.columns(6)
+    columns[0].metric("Road health", f"{health.get('score', 'N/A')} / 100")
+    columns[1].metric("Health band", health.get("band", "N/A"))
+    columns[2].metric("Unique conditions", intelligence.get("unique_detection_count", 0))
+    columns[3].metric("Repair queue", len(intelligence.get("repair_queue", [])))
+    columns[4].metric("Mapped segments", len(intelligence.get("segments", [])))
+    columns[5].metric("GPS coverage", f"{quality.get('gps_coverage', 0):.0%}")
+    tabs = st.tabs(["Repair queue", "Evidence cards", "Segments", "Replay", "Feedback"])
+    with tabs[0]:
+        st.dataframe(pd.DataFrame(intelligence.get("repair_queue", [])), use_container_width=True, hide_index=True)
+    with tabs[1]:
+        st.dataframe(pd.DataFrame(intelligence.get("evidence_cards", [])), use_container_width=True, hide_index=True)
+    with tabs[2]:
+        st.dataframe(pd.DataFrame(intelligence.get("segments", [])), use_container_width=True, hide_index=True)
+    with tabs[3]:
+        st.dataframe(pd.DataFrame(intelligence.get("mission_replay", [])), use_container_width=True, hide_index=True)
+    with tabs[4]:
+        st.dataframe(pd.DataFrame(intelligence.get("active_learning", [])), use_container_width=True, hide_index=True)
 
 
 def _render_feature_status(run_data, detections):
@@ -452,7 +506,7 @@ def _render_feature_status(run_data, detections):
         st.caption("Status reflects this local build and current run; it is not a model-performance claim.")
         st.dataframe(
             pd.DataFrame(build_feature_status(run_data.get("media_type"), has_gps, has_capture_date)),
-            width="stretch", hide_index=True,
+            use_container_width=True, hide_index=True,
         )
 
 
@@ -531,6 +585,7 @@ detections = run_data["detections"]
 statistics = run_data["statistics"]
 _render_pipeline_strip(run_data)
 _render_overview(statistics, detections)
+_render_intelligence(run_data)
 if statistics.get("media_type") == "image" and statistics.get("external_gps_ignored"):
     st.info("External timestamped GPS was supplied, but no video-relative timestamp exists for this image. Only embedded image EXIF GPS is used.")
 
