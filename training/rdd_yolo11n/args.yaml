@@ -1,6 +1,6 @@
 task: detect
 mode: train
-model: yolo11n.pt
+model: C:\Users\iamso\OneDrive\Documents\roadsense\training\rdd_yolo11n\weights\last.pt
 data: D:\RoadSense_RDD2022_4Class\data.yaml
 epochs: 60
 time: null
@@ -25,7 +25,7 @@ single_cls: false
 rect: false
 cos_lr: false
 close_mosaic: 10
-resume: false
+resume: C:\Users\iamso\OneDrive\Documents\roadsense\training\rdd_yolo11n\weights\last.pt
 amp: true
 fraction: 1.0
 profile: false
@@ -77,7 +77,7 @@ momentum: 0.937
 weight_decay: 0.0005
 warmup_epochs: 3.0
 warmup_momentum: 0.8
-warmup_bias_lr: 0.1
+warmup_bias_lr: 0.0
 distill_model: null
 dis: 6.0
 box: 7.5
