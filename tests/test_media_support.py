@@ -7,6 +7,7 @@ from pathlib import Path
 from PIL import Image
 
 from gps_mapping import extract_image_exif_gps, inspect_video_embedded_gps
+from gps_overlay import parse_overlay_coordinates
 
 
 class MediaSupportTests(unittest.TestCase):
@@ -23,6 +24,10 @@ class MediaSupportTests(unittest.TestCase):
         result = inspect_video_embedded_gps("video.mp4")
         self.assertFalse(result["available"])
         self.assertEqual(result["source"], "Unavailable")
+
+    def test_parses_gps_map_camera_coordinate_stamp(self):
+        coordinates = parse_overlay_coordinates("Lat 20.456071° Long 85.901673°")
+        self.assertEqual(coordinates, (20.456071, 85.901673))
 
 
 if __name__ == "__main__":

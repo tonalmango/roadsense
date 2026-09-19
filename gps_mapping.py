@@ -76,6 +76,7 @@ def _normalise_records(records):
                 "altitude": record.get("altitude"),
                 "speed": record.get("speed"),
                 "heading": record.get("heading"),
+                "gps_static": bool(record.get("gps_static", False)),
             }
         )
 
@@ -90,6 +91,7 @@ def _normalise_records(records):
                 "altitude": _average_field(locations, "altitude"),
                 "speed": _average_field(locations, "speed"),
                 "heading": _average_field(locations, "heading"),
+                "gps_static": any(location["gps_static"] for location in locations),
             }
         )
     return normalised
@@ -176,6 +178,22 @@ def match_gps_timestamp(timestamp_seconds, gps_records, max_time_difference_seco
     }
     if detection_time is None or not records:
         return unavailable
+
+    # A location stored in an MP4/MOV tag has no per-frame timestamp. It
+    # describes the capture as a whole, so do not discard it after five seconds.
+    static_records = [record for record in records if record.get("gps_static")]
+    if static_records:
+        location = static_records[0]
+        return {
+            "latitude": location["latitude"],
+            "longitude": location["longitude"],
+            "altitude": location.get("altitude"),
+            "speed": location.get("speed"),
+            "heading": location.get("heading"),
+            "gps_timestamp": None,
+            "gps_match_method": "embedded_static",
+            "gps_time_difference_seconds": None,
+        }
 
     timestamps = [record["timestamp_seconds"] for record in records]
     right_index = bisect_left(timestamps, detection_time)
@@ -339,34 +357,60 @@ def inspect_video_embedded_gps(video_path):
         "message": "",
         "video": str(video_path),
     }
-    if ffprobe is None:
-        result["message"] = "FFprobe is not installed or is not available on PATH."
-        return result
-    try:
-        completed = subprocess.run(
-            [
-                ffprobe, "-v", "error", "-show_format", "-show_streams",
-                "-show_chapters", "-show_programs", "-show_packets", "-show_data",
-                "-of", "json", str(video_path),
-            ],
-            capture_output=True,
-            text=True,
-            check=True,
-        )
-        probe = json.loads(completed.stdout or "{}")
-    except (OSError, subprocess.CalledProcessError, json.JSONDecodeError) as error:
-        result["message"] = f"FFprobe inspection failed: {error}"
-        return result
+    records = []
+    if ffprobe is not None:
+        try:
+            completed = subprocess.run(
+                [
+                    ffprobe, "-v", "error", "-show_format", "-show_streams",
+                    "-show_chapters", "-show_programs", "-show_packets", "-show_data",
+                    "-of", "json", str(video_path),
+                ],
+                capture_output=True,
+                text=True,
+                check=True,
+            )
+            probe = json.loads(completed.stdout or "{}")
+            result["format"] = probe.get("format", {})
+            records = _extract_ffprobe_records(probe)
+        except (OSError, subprocess.CalledProcessError, json.JSONDecodeError) as error:
+            result["message"] = f"FFprobe inspection failed: {error}"
 
-    result["format"] = probe.get("format", {})
-    records = _extract_ffprobe_records(probe)
+    # The location tag used by phone recordings has no timed telemetry stream.
+    # gps_overlay also reads QuickTime atoms without ffprobe and can recover a
+    # visible GPS Map Camera overlay when metadata was removed on export.
+    fallback = None
+    if not records:
+        try:
+            from gps_overlay import get_gps, ocr_engine_available
+            fallback = get_gps(video_path)
+        except (ImportError, OSError, ValueError):
+            fallback = None
+        if fallback:
+            records = [{
+                "timestamp_seconds": 0.0,
+                "latitude": fallback["lat"],
+                "longitude": fallback["lon"],
+                "gps_static": True,
+            }]
     result["records"] = _normalise_records(records)
     if result["records"]:
         result["available"] = True
-        result["source"] = "Embedded video telemetry"
-        result["message"] = "GPS coordinates extracted from FFprobe metadata or timed data."
+        if fallback:
+            result["source"] = (
+                "Embedded video location metadata"
+                if fallback.get("source") == "container-metadata"
+                else "Visible GPS coordinate overlay"
+            )
+            result["message"] = "GPS coordinates extracted from the video location metadata or visible overlay."
+        else:
+            result["source"] = "Embedded video telemetry"
+            result["message"] = "GPS coordinates extracted from FFprobe metadata or timed data."
     else:
-        result["message"] = "No extractable GPS coordinates were found in video metadata or data streams."
+        if ffprobe is None and not ocr_engine_available():
+            result["message"] = "No GPS metadata was found, and the visible GPS overlay could not be read because Tesseract OCR is not installed."
+        else:
+            result["message"] = result["message"] or "No extractable GPS coordinates were found in video metadata, data streams, or visible overlay."
     return result
 
 

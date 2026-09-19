@@ -4,10 +4,10 @@ from feature_status import build_feature_status
 
 
 class FeatureStatusTests(unittest.TestCase):
-    def test_status_panel_never_claims_embedded_mp4_gps(self):
+    def test_status_panel_reports_embedded_mp4_gps_support(self):
         rows = build_feature_status(media_type="video", has_gps=False, has_capture_date=False)
         status = {row["Capability"]: row["Status"] for row in rows}
-        self.assertEqual(status["Embedded MP4 GPS"], "Not implemented")
+        self.assertEqual(status["Embedded MP4 GPS"], "Available when metadata exists")
         self.assertEqual(status["Timestamp GPS synchronization"], "Not available for this input")
 
 

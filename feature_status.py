@@ -18,7 +18,7 @@ def build_feature_status(media_type=None, has_gps=False, has_capture_date=False)
         {"Capability": "Rule-based RoadDamages severity", "Status": "Implemented", "Evidence": "severity.py"},
         {"Capability": "Timestamp GPS synchronization", "Status": "Implemented" if has_gps else "Not available for this input", "Evidence": "gps_mapping.py"},
         {"Capability": "EXIF GPS", "Status": "Available when metadata exists" if media_type == "image" else "Not available for this input", "Evidence": "gps_mapping.py"},
-        {"Capability": "Embedded MP4 GPS", "Status": "Not implemented", "Evidence": "generic OpenCV MP4 telemetry is not assumed"},
+        {"Capability": "Embedded MP4 GPS", "Status": "Available when metadata exists" if media_type == "video" else "Not applicable", "Evidence": "FFprobe/QuickTime metadata and visible GPS overlay fallback"},
         {"Capability": "Reliable capture-date filter", "Status": "Available when metadata exists" if has_capture_date else "Not available for this input", "Evidence": "capture_metadata.py"},
         {"Capability": "Interactive map and filters", "Status": "Implemented", "Evidence": "app.py / PyDeck"},
         {"Capability": "Prototype repair prioritization", "Status": "Implemented", "Evidence": "priority.py"},

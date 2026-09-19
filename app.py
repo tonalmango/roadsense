@@ -555,7 +555,12 @@ with map_column:
     if run_data.get("gps_path") and "demo" in Path(run_data["gps_path"]).name.lower():
         st.warning("DEMO GPS DATA: coordinates are demonstration data, not claimed dashcam capture.")
     elif run_data.get("statistics", {}).get("gps_source") == "Unavailable":
-        st.info("VISION ANALYSIS COMPLETE: GPS data was not provided, so geographic placement is unavailable.")
+        gps_message = run_data.get("statistics", {}).get("embedded_video_gps", {}).get("message")
+        st.info(
+            "VISION ANALYSIS COMPLETE: GPS coordinates could not be extracted from this video, "
+            "so geographic placement is unavailable."
+            + (f" {gps_message}" if gps_message else "")
+        )
     _render_map(filtered, run_data.get("gps_path"), run_data.get("statistics", {}).get("gps_records"))
 with evidence_column:
     _render_evidence(filtered, run_data["results_folder"])

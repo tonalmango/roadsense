@@ -46,6 +46,12 @@ class GpsSynchronizationTests(unittest.TestCase):
         self.assertIsNone(result["latitude"])
         self.assertIsNone(result["gps_time_difference_seconds"])
 
+    def test_static_embedded_location_applies_beyond_first_five_seconds(self):
+        records = [{"timestamp_seconds": 0, "latitude": 20.2961, "longitude": 85.8245, "gps_static": True}]
+        result = match_gps_timestamp(60.0, records, max_time_difference_seconds=5.0)
+        self.assertEqual(result["gps_match_method"], "embedded_static")
+        self.assertEqual(result["latitude"], 20.2961)
+
     def test_duplicate_timestamps_are_averaged(self):
         duplicate_records = [
             {"timestamp_seconds": 1.0, "latitude": 20.0, "longitude": 85.0},
