@@ -69,7 +69,15 @@ def run_pipeline(
         # pipeline failure instead of preventing even the command help screen.
         from detection import CLASS_CONFIDENCE_THRESHOLDS, process_frames_with_metadata
         from frame_extraction import extract_frames
-        from gps_mapping import inspect_video_embedded_gps
+        from gps_mapping import inspect_video_embedded_gps, load_gps_records
+        telemetry = inspect_video_embedded_gps(video_path)
+        embedded_records = telemetry.get("records", [])
+        external_records = load_gps_records(gps_data_path) if gps_data_path else []
+        selected_gps_records = embedded_records or external_records
+        selected_gps_source = (
+            telemetry.get("source") if embedded_records
+            else "External GPS file" if external_records else "Unavailable"
+        )
 
         print("[1/6] Extracting frames...")
         frame_metadata = extract_frames(
@@ -99,6 +107,8 @@ def run_pipeline(
             metadata_path=metadata_path,
             output_folder=results_folder,
             gps_data_path=gps_data_path,
+            gps_records=selected_gps_records,
+            gps_source=selected_gps_source,
             road_context=road_context,
             traffic_factor=traffic_factor,
             minimum_confidence=minimum_confidence,
@@ -110,7 +120,7 @@ def run_pipeline(
         _write_json(final_path, detections)
         elapsed_seconds = time.perf_counter() - started_at
         statistics = _statistics(video_path, frame_metadata, detections, elapsed_seconds)
-        telemetry = inspect_video_embedded_gps(video_path)
+        gps_records = selected_gps_records
         statistics.update(
             {
                 "media_type": "video",
@@ -119,7 +129,8 @@ def run_pipeline(
                 "temporal_confirmation_frames": temporal_confirmation_frames,
                 "explicit_preprocessing": bool(preprocess_frames),
                 "preprocessing_size": preprocessing_size if preprocess_frames else None,
-                "gps_source": "External GPS file" if gps_data_path else "Unavailable",
+                "gps_source": selected_gps_source if gps_records else "Unavailable",
+                "gps_records": gps_records,
                 "embedded_video_gps": telemetry,
             }
         )

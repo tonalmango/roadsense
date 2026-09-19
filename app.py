@@ -231,7 +231,7 @@ def _render_overview(statistics, detections):
         st.caption(f"{len(high_priority)} repair-relevant road-damage detection(s) currently rank High or Critical in prototype maintenance prioritization.")
 
 
-def _render_map(detections, gps_path):
+def _render_map(detections, gps_path, embedded_records=None):
     map_rows = []
     for detection in detections:
         if detection.get("latitude") is None or detection.get("longitude") is None:
@@ -268,7 +268,7 @@ def _render_map(detections, gps_path):
             pickable=True,
         )
     ]
-    route_records = load_gps_records(gps_path)
+    route_records = embedded_records or load_gps_records(gps_path)
     if len(route_records) >= 2:
         layers.insert(
             0,
@@ -489,7 +489,7 @@ with st.sidebar:
     st.markdown('<div class="rs-kicker">Road scan</div><h3 style="margin-top:0">Analysis input</h3>', unsafe_allow_html=True)
     st.caption("Upload a dashcam recording to begin local analysis.")
     media_file = st.file_uploader("Road media", type=["mp4", "mov", "avi", "mkv", "jpg", "jpeg", "png", "webp"])
-    gps_file = st.file_uploader("Optional GPS CSV or JSON", type=["csv", "json"])
+    gps_file = st.file_uploader("Optional GPS CSV, GPX, or JSON", type=["csv", "gpx", "json"])
     sampling_interval = st.number_input("Sampling interval (seconds)", min_value=0.1, value=1.0, step=0.1)
     minimum_confidence = st.slider("Minimum confidence", min_value=0.15, max_value=0.80, value=0.25, step=0.05,
                                    help="Acceptance floor. Individual RAD and damage-model classes also retain their configured thresholds.")
@@ -554,9 +554,9 @@ with map_column:
     _section_heading("ROAD CONDITION MAP", "Location-aware inspection", "Detected road conditions synchronized with available location data.")
     if run_data.get("gps_path") and "demo" in Path(run_data["gps_path"]).name.lower():
         st.warning("DEMO GPS DATA: coordinates are demonstration data, not claimed dashcam capture.")
-    elif run_data.get("gps_path") is None:
+    elif run_data.get("statistics", {}).get("gps_source") == "Unavailable":
         st.info("VISION ANALYSIS COMPLETE: GPS data was not provided, so geographic placement is unavailable.")
-    _render_map(filtered, run_data.get("gps_path"))
+    _render_map(filtered, run_data.get("gps_path"), run_data.get("statistics", {}).get("gps_records"))
 with evidence_column:
     _render_evidence(filtered, run_data["results_folder"])
 

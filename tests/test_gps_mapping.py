@@ -1,8 +1,10 @@
 """Unit tests for RoadSense timestamp-based GPS matching."""
 
+import tempfile
 import unittest
+from pathlib import Path
 
-from gps_mapping import enrich_detections_with_gps, match_gps_timestamp
+from gps_mapping import enrich_detections_with_gps, load_gps_records, match_gps_timestamp
 
 
 GPS_RECORDS = [
@@ -23,6 +25,7 @@ class GpsSynchronizationTests(unittest.TestCase):
         self.assertEqual(result["gps_match_method"], "interpolated")
         self.assertEqual(result["latitude"], 21.0)
         self.assertEqual(result["longitude"], 86.0)
+        self.assertIsNone(result["altitude"])
         self.assertEqual(result["gps_time_difference_seconds"], 0.0)
 
     def test_nearest_timestamp_after_last_record(self):
@@ -58,6 +61,29 @@ class GpsSynchronizationTests(unittest.TestCase):
         self.assertEqual(enriched["id"], 1)
         self.assertEqual(enriched["gps_match_method"], "interpolated")
         self.assertEqual(enriched["latitude"], 21.0)
+
+    def test_optional_telemetry_fields_are_interpolated(self):
+        records = [
+            {"timestamp_seconds": 0, "latitude": 20, "longitude": 85, "altitude": 10, "speed": 2, "heading": 90},
+            {"timestamp_seconds": 2, "latitude": 22, "longitude": 87, "altitude": 14, "speed": 6, "heading": 100},
+        ]
+        result = match_gps_timestamp(1, records)
+        self.assertEqual(result["altitude"], 12)
+        self.assertEqual(result["speed"], 4)
+        self.assertEqual(result["heading"], 95)
+
+    def test_gpx_track_points_use_elapsed_time(self):
+        gpx = """<gpx xmlns=\"http://www.topografix.com/GPX/1/1\"><trk><trkseg>
+        <trkpt lat=\"20.0\" lon=\"85.0\"><ele>10</ele><time>2026-09-19T00:00:00Z</time></trkpt>
+        <trkpt lat=\"20.2\" lon=\"85.2\"><ele>14</ele><time>2026-09-19T00:00:02Z</time></trkpt>
+        </trkseg></trk></gpx>"""
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "track.gpx"
+            path.write_text(gpx, encoding="utf-8")
+            records = load_gps_records(path)
+        self.assertEqual(len(records), 2)
+        self.assertEqual(records[1]["timestamp_seconds"], 2.0)
+        self.assertEqual(records[1]["altitude"], 14.0)
 
 
 if __name__ == "__main__":

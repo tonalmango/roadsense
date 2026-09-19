@@ -344,6 +344,8 @@ def process_frames_with_metadata(
     metadata_path="frames/frame_metadata.json",
     output_folder="results",
     gps_data_path=None,
+    gps_records=None,
+    gps_source=None,
     road_context=None,
     traffic_factor=None,
     minimum_confidence=None,
@@ -449,12 +451,12 @@ def process_frames_with_metadata(
         detection["id"] = identifier
         detection.setdefault("temporal_confirmed", temporal_confirmation_frames <= 1)
 
-    gps_records = load_gps_records(gps_data_path)
+    gps_records = gps_records if gps_records is not None else load_gps_records(gps_data_path)
     all_detections = enrich_detections_with_gps(
         all_detections,
         gps_records,
         max_time_difference_seconds=max_gps_time_difference_seconds,
-        gps_source="External GPS file" if gps_data_path else None,
+        gps_source=gps_source or ("External GPS file" if gps_data_path else None),
     )
 
     detections_path = output_folder / "detections.json"
@@ -463,12 +465,10 @@ def process_frames_with_metadata(
 
     print(f"Usable frames processed: {usable_frame_count}")
     print(f"Detections saved: {len(all_detections)}")
-    if gps_data_path is None:
-        print("GPS: unavailable (no GPS data file supplied).")
-    elif not gps_records:
-        print(f"GPS: unavailable (no valid records in {gps_data_path}).")
+    if not gps_records:
+        print("GPS: unavailable (no valid embedded or external records).")
     else:
-        print(f"GPS records loaded: {len(gps_records)} from {gps_data_path}")
+        print(f"GPS records loaded: {len(gps_records)} ({gps_source or 'GPS source'})")
     print(f"Detection JSON saved to: {detections_path}")
     for message in skipped_frames:
         print(f"Skipped: {message}")
